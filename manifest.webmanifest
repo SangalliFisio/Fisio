@@ -1,6 +1,6 @@
 {
-  "name": "Conteggio Lavoro e Incassi",
-  "short_name": "FisioConto",
+  "name": "FisioLog",
+  "short_name": "FisioLog",
   "description": "Gestionale personale per conteggio prestazioni e incassi",
   "lang": "it",
   "start_url": "./index.html",

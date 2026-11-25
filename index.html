@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conteggio Lavoro e Incassi Fisioterapista</title>
+    <title>FisioLog</title>
     <meta name="theme-color" content="#0d9488">
     <link rel="manifest" href="manifest.webmanifest">
+    <script>try{var _s=JSON.parse(localStorage.getItem("fisioconto_settings_v1")||"{}");if(_s.theme==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="tailwind.css">
@@ -32,6 +33,32 @@
         input[type="number"] {
             -moz-appearance: textfield;
         }
+
+        html.dark { color-scheme: dark; }
+        html.dark body { background: #0b1220; color: #e2e8f0; }
+        html.dark .bg-white, html.dark [class*="bg-white/"] { background-color: #162032; }
+        html.dark .bg-slate-50, html.dark [class*="bg-slate-50/"] { background-color: #0b1220; }
+        html.dark .bg-slate-100, html.dark [class*="bg-slate-100/"] { background-color: #243247; }
+        html.dark .bg-slate-200 { background-color: #334155; }
+        html.dark .bg-slate-900 { background-color: #475569; }
+        html.dark [class*="border-slate"], html.dark .divide-y > * { border-color: #2b3a52; }
+        html.dark [class*="border-teal-"], html.dark [class*="border-blue-"], html.dark [class*="border-indigo-"],
+        html.dark [class*="border-emerald-"], html.dark [class*="border-amber-"], html.dark [class*="border-rose-"] { border-color: rgba(148,163,184,.28); }
+        html.dark [class*="bg-teal-50"], html.dark [class*="bg-teal-100"], html.dark [class*="bg-blue-50"], html.dark [class*="bg-blue-100"],
+        html.dark [class*="bg-indigo-50"], html.dark [class*="bg-indigo-100"], html.dark [class*="bg-emerald-50"], html.dark [class*="bg-emerald-100"],
+        html.dark [class*="bg-amber-50"], html.dark [class*="bg-rose-50"], html.dark [class*="bg-rose-100"] { background-color: rgba(148,163,184,.13); }
+        html.dark .text-slate-900, html.dark .text-slate-800 { color: #f1f5f9; }
+        html.dark .text-slate-700, html.dark .text-slate-600 { color: #cbd5e1; }
+        html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8; }
+        html.dark [class*="text-teal-9"], html.dark [class*="text-blue-9"], html.dark [class*="text-indigo-9"],
+        html.dark [class*="text-emerald-9"], html.dark [class*="text-amber-9"], html.dark [class*="text-rose-9"] { color: #e2e8f0; }
+        html.dark [class*="text-teal-8"], html.dark [class*="text-teal-7"] { color: #5eead4; }
+        html.dark [class*="text-blue-8"], html.dark [class*="text-blue-7"] { color: #93c5fd; }
+        html.dark [class*="text-indigo-8"], html.dark [class*="text-indigo-7"] { color: #a5b4fc; }
+        html.dark [class*="text-emerald-8"], html.dark [class*="text-emerald-7"] { color: #6ee7b7; }
+        html.dark [class*="text-amber-8"], html.dark [class*="text-amber-7"] { color: #fcd34d; }
+        html.dark [class*="text-rose-8"], html.dark [class*="text-rose-7"] { color: #fda4af; }
+        html.dark ::placeholder { color: #64748b; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col selection:bg-teal-100 selection:text-teal-900">
@@ -41,9 +68,9 @@
     <!-- ========================================== -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 min-h-16 py-2">
         <div class="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2.5">
-            <div class="flex items-center gap-2.5 sm:gap-4 mx-auto sm:mx-0">
+            <div class="flex items-center gap-2.5 sm:gap-4">
                 <button type="button" onclick="handleTopIconClick()" title="Torna in alto"
-                    class="w-10 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0">
+                    class="w-10 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white hidden sm:flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0">
                     <i data-lucide="activity" class="w-5 h-5"></i>
                 </button>
 
@@ -61,6 +88,10 @@
                 </nav>
             </div>
 
+            <button type="button" onclick="openSettingsModal()" title="Impostazioni"
+                class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
         </div>
     </header>
 
@@ -139,73 +170,48 @@
         <!-- ========================================== -->
         <section id="view-payments" class="hidden space-y-5">
 
-            <!-- Intestazione, Azione Registra da Maturato e Filtri Anno / Mese -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 class="text-lg sm:text-xl font-extrabold text-slate-900">Registro Incassi</h1>
-                        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Storico pagamenti ricevuti per data effettiva di incasso</p>
-                    </div>
+            <!-- Riepilogo Incassi (stesso stile del riepilogo mensile) -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-center gap-2 pb-3.5 border-b border-slate-100">
+                    <h1 class="sr-only">Registro Incassi</h1>
+                    <select id="filter-month" onchange="renderPayments()" aria-label="Mese" class="bg-transparent text-slate-900 text-base sm:text-lg font-extrabold rounded-xl px-2 py-1 focus:ring-2 focus:ring-teal-500 cursor-pointer">
+                        <option value="all">Tutti i mesi</option><option value="01">Gennaio</option><option value="02">Febbraio</option><option value="03">Marzo</option><option value="04">Aprile</option><option value="05">Maggio</option><option value="06">Giugno</option><option value="07">Luglio</option><option value="08">Agosto</option><option value="09">Settembre</option><option value="10">Ottobre</option><option value="11">Novembre</option><option value="12">Dicembre</option>
+                    </select>
+                    <select id="filter-year" onchange="renderPayments()" aria-label="Anno" class="bg-transparent text-slate-900 text-base sm:text-lg font-extrabold rounded-xl px-2 py-1 focus:ring-2 focus:ring-teal-500 cursor-pointer">
+                    </select>
+                </div>
 
-                    <div class="flex flex-wrap items-center gap-2.5">
-                        <button type="button" onclick="openQuickPaymentModal('month')"
-                            class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
-                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                            <span>Registra Incasso da Maturato</span>
-                        </button>
-
-                        <div>
-                            <label for="filter-year" class="block text-[11px] font-semibold text-slate-500 mb-0.5">Anno</label>
-                            <select id="filter-year" onchange="renderPayments()"
-                                class="bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer">
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="filter-month" class="block text-[11px] font-semibold text-slate-500 mb-0.5">Mese</label>
-                            <select id="filter-month" onchange="renderPayments()"
-                                class="bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer">
-                                <option value="all">Tutti i mesi</option>
-                                <option value="01">Gennaio</option>
-                                <option value="02">Febbraio</option>
-                                <option value="03">Marzo</option>
-                                <option value="04">Aprile</option>
-                                <option value="05">Maggio</option>
-                                <option value="06">Giugno</option>
-                                <option value="07">Luglio</option>
-                                <option value="08">Agosto</option>
-                                <option value="09">Settembre</option>
-                                <option value="10">Ottobre</option>
-                                <option value="11">Novembre</option>
-                                <option value="12">Dicembre</option>
-                            </select>
-                        </div>
+                <div class="mt-3.5">
+                    <span class="text-xs font-medium text-slate-500">Totale incassato</span>
+                    <div class="flex flex-wrap items-baseline justify-between gap-2 mt-0.5">
+                        <div id="kpi-total-collected" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">0,00 €</div>
+                        <span id="kpi-total-count" class="text-xs font-semibold text-slate-500">0 incassi registrati</span>
                     </div>
                 </div>
 
-                <!-- KPI Incassato -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-100">
-                    <div class="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-3.5">
-                        <span class="text-xs font-semibold text-emerald-800 block">Totale Incassato</span>
-                        <span id="kpi-total-collected" class="text-xl sm:text-2xl font-extrabold text-emerald-950 mt-0.5 block tabular-nums">0,00 €</span>
-                        <span id="kpi-total-count" class="text-[11px] text-emerald-700 mt-0.5 block">0 incassi registrati</span>
+                <div class="mt-3.5 space-y-2 text-xs">
+                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-teal-50/70 border border-teal-100">
+                        <span class="font-bold text-teal-950">Ambulatorio</span>
+                        <span id="kpi-ambulatorio" class="font-extrabold text-teal-950 text-sm tabular-nums">0,00 €</span>
                     </div>
-                    <div class="bg-teal-50/60 border border-teal-200/70 rounded-xl p-3.5">
-                        <span class="text-xs font-semibold text-teal-800 block">Ambulatorio</span>
-                        <span id="kpi-ambulatorio" class="text-lg sm:text-xl font-extrabold text-teal-950 mt-1 block tabular-nums">0,00 €</span>
+                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-blue-50/70 border border-blue-100">
+                        <span class="font-bold text-blue-950">Domiciliari</span>
+                        <span id="kpi-domiciliari" class="font-extrabold text-blue-950 text-sm tabular-nums">0,00 €</span>
                     </div>
-                    <div class="bg-blue-50/60 border border-blue-200/70 rounded-xl p-3.5">
-                        <span class="text-xs font-semibold text-blue-800 block">Domiciliari</span>
-                        <span id="kpi-domiciliari" class="text-lg sm:text-xl font-extrabold text-blue-950 mt-1 block tabular-nums">0,00 €</span>
-                    </div>
-                    <div class="bg-indigo-50/60 border border-indigo-200/70 rounded-xl p-3.5">
-                        <span class="text-xs font-semibold text-indigo-800 block">Privati</span>
-                        <span id="kpi-privati" class="text-lg sm:text-xl font-extrabold text-indigo-950 mt-1 block tabular-nums">0,00 €</span>
+                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-100">
+                        <span class="font-bold text-indigo-950">Privati</span>
+                        <span id="kpi-privati" class="font-extrabold text-indigo-950 text-sm tabular-nums">0,00 €</span>
                     </div>
                 </div>
+
+                <button type="button" onclick="openQuickPaymentModal('month')"
+                    class="mt-3.5 w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Registra Incasso da Maturato</span>
+                </button>
             </div>
 
-            <!-- Elenco Incassi + Filtri Categoria + Cloud / Backup / Ripristina / CSV -->
+            <!-- Elenco Incassi + Filtri Categoria -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
                 <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex flex-wrap items-center gap-1.5">
@@ -218,24 +224,6 @@
                         <button type="button" data-cat="Privati" onclick="setCategoryFilter('Privati')"
                             class="cat-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">Privati</button>
                     </div>
-
-                    <div class="flex flex-wrap items-center gap-2 shrink-0">
-                        <button type="button" onclick="shareBackup()"
-                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                            <i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i>
-                            <span>Backup su Drive</span>
-                        </button>
-                        <label class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                            <i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-amber-600"></i>
-                            <span>Ripristina</span>
-                            <input type="file" id="import-json-input" onchange="importBackupJSON(event)" class="hidden">
-                        </label>
-                        <button type="button" onclick="exportPaymentsCSV()"
-                            class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                            <i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i>
-                            <span>Esporta CSV</span>
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Riepilogo 12 Mesi (visibile quando Mese = Tutti i mesi) -->
@@ -247,6 +235,47 @@
         </section>
 
     </main>
+
+    <!-- MODALE: IMPOSTAZIONI -->
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl border border-slate-100 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="settings" class="w-5 h-5 text-teal-600"></i>Impostazioni</h3>
+                <button type="button" onclick="closeModal('settings-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Aspetto</h4>
+                    <div id="settings-theme" class="grid grid-cols-2 gap-2"></div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Tariffe</h4>
+                    <p class="text-[11px] text-slate-500 mb-2">Una nuova tariffa vale dalla data scelta in poi: i giorni precedenti restano al vecchio prezzo.</p>
+                    <div id="settings-rates" class="space-y-2.5"></div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dati</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="shareBackup()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                            <i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i><span>Backup su Drive</span>
+                        </button>
+                        <label class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                            <i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-amber-600"></i><span>Ripristina</span>
+                            <input type="file" id="import-json-input" onchange="importBackupJSON(event)" class="hidden">
+                        </label>
+                        <button type="button" onclick="exportPaymentsCSV()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                            <i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i><span>Esporta CSV</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ========================================== -->
     <!-- MODALE: SINCRONIZZAZIONE CLOUD APPS SCRIPT -->
@@ -625,11 +654,28 @@
         // ==========================================
         // COSTANTI, STATO, STORAGE E CLOUD SYNC
         // ==========================================
-        const RATES = {
-            ambulatorio: 14,
-            domiciliari: 26,
-            privati: 50
-        };
+        const RATE_DEFAULTS = { ambulatorio: 14, domiciliari: 26, privati: 50 };
+
+        // Tariffa valida in una certa data: le tariffe passate restano "congelate"
+        function rateFor(cat, dateKey) {
+            const hist = (state.rateHistory && state.rateHistory[cat]) || [{ from: '0000-01-01', rate: RATE_DEFAULTS[cat] }];
+            let r = hist[0].rate;
+            hist.forEach(e => { if (e.from <= dateKey) r = e.rate; });
+            return r;
+        }
+        function curRate(cat) { return rateFor(cat, getTodayISO()); }
+
+        function normalizeRateHistory(raw) {
+            const out = {};
+            Object.keys(RATE_DEFAULTS).forEach(k => {
+                let h = raw && Array.isArray(raw[k]) ? raw[k].filter(e => e && typeof e.from === 'string' && Number.isFinite(Number(e.rate))).map(e => ({ from: e.from, rate: Number(e.rate) })) : [];
+                if (!h.length) h = [{ from: '0000-01-01', rate: RATE_DEFAULTS[k] }];
+                h.sort((x, y) => (x.from < y.from ? -1 : 1));
+                h[0].from = '0000-01-01';
+                out[k] = h;
+            });
+            return out;
+        }
 
         const STORAGE_KEYS = {
             dailyLogs: 'fisioconto_daily_logs_v2',
@@ -637,7 +683,8 @@
             payments: 'fisioconto_payments_v2',
             meta: 'fisioconto_meta_v1',
             cloudUrl: 'fisioconto_cloud_url_v1',
-            deviceId: 'fisioconto_device_id_v1'
+            deviceId: 'fisioconto_device_id_v1',
+            settings: 'fisioconto_settings_v1'
         };
 
         const DEFAULT_PATIENTS = [
@@ -654,6 +701,8 @@
             patients: [...DEFAULT_PATIENTS],
             selectedPrivatePatient: DEFAULT_PATIENTS[0],
             payments: [],
+            theme: 'light',
+            rateHistory: null,
             categoryFilter: 'Tutti',
             updatedAt: null,
             deviceId: '',
@@ -724,7 +773,8 @@
                 dailyLogs: state.dailyLogs,
                 patients: state.patients,
                 selectedPrivatePatient: state.selectedPrivatePatient,
-                payments: state.payments
+                payments: state.payments,
+                settings: { rateHistory: state.rateHistory }
             };
         }
 
@@ -744,6 +794,9 @@
             if (Array.isArray(dataObj.payments)) {
                 state.payments = dataObj.payments;
             }
+            if (dataObj.settings && dataObj.settings.rateHistory) {
+                state.rateHistory = normalizeRateHistory(dataObj.settings.rateHistory);
+            }
             if (timestampISO) {
                 state.updatedAt = timestampISO;
             }
@@ -752,6 +805,7 @@
                 localStorage.setItem(STORAGE_KEYS.dailyLogs, JSON.stringify(state.dailyLogs));
                 localStorage.setItem(STORAGE_KEYS.patients, JSON.stringify(state.patients));
                 localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(state.payments));
+                localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify({ theme: state.theme, rateHistory: state.rateHistory }));
                 localStorage.setItem(STORAGE_KEYS.meta, JSON.stringify({
                     updatedAt: state.updatedAt,
                     deviceId: state.deviceId,
@@ -770,6 +824,7 @@
                 localStorage.setItem(STORAGE_KEYS.dailyLogs, JSON.stringify(state.dailyLogs));
                 localStorage.setItem(STORAGE_KEYS.patients, JSON.stringify(state.patients));
                 localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(state.payments));
+                localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify({ theme: state.theme, rateHistory: state.rateHistory }));
                 localStorage.setItem(STORAGE_KEYS.meta, JSON.stringify({
                     updatedAt: state.updatedAt,
                     deviceId: state.deviceId,
@@ -995,6 +1050,15 @@
                 console.error('Errore caricamento payments:', e);
             }
 
+            try {
+                const rawSettings = localStorage.getItem(STORAGE_KEYS.settings);
+                const st = rawSettings ? JSON.parse(rawSettings) : {};
+                state.theme = st && st.theme === 'dark' ? 'dark' : 'light';
+                state.rateHistory = normalizeRateHistory(st && st.rateHistory);
+            } catch (e) {
+                state.rateHistory = normalizeRateHistory(null);
+            }
+
             setCloudStatus(state.cloudUrl ? 'Sincronizzato' : 'Cloud non configurato');
         }
 
@@ -1127,9 +1191,9 @@
             const domCount = domRsaCount + domAdiCount;
             const privCount = Object.values(rec.privati).reduce((acc, v) => acc + Math.max(0, Number(v) || 0), 0);
 
-            const ambEuro = ambCount * RATES.ambulatorio;
-            const domEuro = domCount * RATES.domiciliari;
-            const privEuro = privCount * RATES.privati;
+            const ambEuro = ambCount * rateFor('ambulatorio', dateKey);
+            const domEuro = domCount * rateFor('domiciliari', dateKey);
+            const privEuro = privCount * rateFor('privati', dateKey);
 
             return {
                 ambCount,
@@ -1151,6 +1215,8 @@
             let domAdiCount = 0;
             let privCount = 0;
             const privateByPatient = {};
+            const privateEuroByPatient = {};
+            let ambEuro = 0, domRsaEuro = 0, domAdiEuro = 0, domEuro = 0, privEuro = 0;
             const daysBreakdown = [];
 
             Object.keys(state.dailyLogs).sort().forEach(dateKey => {
@@ -1162,11 +1228,17 @@
                         domRsaCount += ds.domRsaCount;
                         domAdiCount += ds.domAdiCount;
                         privCount += ds.privCount;
+                        ambEuro += ds.ambEuro;
+                        domEuro += ds.domEuro;
+                        privEuro += ds.privEuro;
+                        domRsaEuro += ds.domRsaCount * rateFor('domiciliari', dateKey);
+                        domAdiEuro += ds.domAdiCount * rateFor('domiciliari', dateKey);
 
                         Object.entries(rec.privati).forEach(([pName, pCount]) => {
                             const countNum = Number(pCount) || 0;
                             if (countNum > 0) {
                                 privateByPatient[pName] = (privateByPatient[pName] || 0) + countNum;
+                                privateEuroByPatient[pName] = (privateEuroByPatient[pName] || 0) + countNum * rateFor('privati', dateKey);
                             }
                         });
 
@@ -1179,11 +1251,6 @@
             });
 
             const domCount = domRsaCount + domAdiCount;
-            const ambEuro = ambCount * RATES.ambulatorio;
-            const domRsaEuro = domRsaCount * RATES.domiciliari;
-            const domAdiEuro = domAdiCount * RATES.domiciliari;
-            const domEuro = domCount * RATES.domiciliari;
-            const privEuro = privCount * RATES.privati;
 
             let collectedAmb = 0;
             let collectedDom = 0;
@@ -1227,6 +1294,7 @@
                 collectedTotal: collectedAmb + collectedDom + collectedPriv,
                 collectedByPatient,
                 privateByPatient,
+                privateEuroByPatient,
                 daysBreakdown
             };
         }
@@ -1309,6 +1377,88 @@
             persistChanges();
             renderWorkView();
             showToast('Giornata azzerata');
+        }
+
+        // ==========================================
+        // IMPOSTAZIONI: TEMA E TARIFFE
+        // ==========================================
+        function applyTheme() {
+            document.documentElement.classList.toggle('dark', state.theme === 'dark');
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#0b1220' : '#0d9488');
+        }
+
+        function setTheme(theme) {
+            state.theme = theme === 'dark' ? 'dark' : 'light';
+            applyTheme();
+            persistChanges({ syncCloud: false });
+            renderSettings();
+        }
+
+        function openSettingsModal() {
+            renderSettings();
+            document.getElementById('settings-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function renderSettings() {
+            const themeEl = document.getElementById('settings-theme');
+            if (themeEl) {
+                const on = 'border-teal-500 bg-teal-50 text-teal-800';
+                const off = 'border-slate-200 bg-white text-slate-600';
+                themeEl.innerHTML = [['light', 'Chiaro', 'sun'], ['dark', 'Scuro', 'moon']].map(([k, label, icon]) => `
+                    <button type="button" onclick="setTheme('${k}')"
+                        class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-bold cursor-pointer transition-colors ${state.theme === k ? on : off}">
+                        <i data-lucide="${icon}" class="w-4 h-4"></i><span>${label}</span>
+                    </button>`).join('');
+            }
+
+            const ratesEl = document.getElementById('settings-rates');
+            if (ratesEl) {
+                const inp = 'bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-2 focus:ring-teal-500 tabular-nums';
+                ratesEl.innerHTML = [['ambulatorio', 'Ambulatorio', 'seduta'], ['domiciliari', 'Domiciliari (RSA aperta e ADI)', 'accesso'], ['privati', 'Privati', 'seduta']].map(([k, label, unit]) => {
+                    const hist = state.rateHistory[k].map(e =>
+                        `<li>${e.from === '0000-01-01' ? 'Iniziale' : 'dal ' + formatDateShortIT(e.from)}: <b>${formatCurrency(e.rate)}</b></li>`).join('');
+                    return `
+                    <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-sm font-bold text-slate-900">${label}</span>
+                            <span class="text-xs text-slate-500 tabular-nums">oggi ${formatCurrency(curRate(k))} / ${unit}</span>
+                        </div>
+                        <div class="flex flex-wrap items-end gap-2 mt-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Nuova tariffa (€)</label>
+                                <input id="rate-val-${k}" type="number" step="0.01" min="0" inputmode="decimal" value="${curRate(k)}" class="w-24 ${inp}">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Valida dal</label>
+                                <input id="rate-from-${k}" type="date" value="${getTodayISO()}" class="${inp}">
+                            </div>
+                            <button type="button" onclick="saveRate('${k}')"
+                                class="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer">Salva</button>
+                        </div>
+                        <ul class="mt-2 text-[11px] text-slate-500 space-y-0.5">${hist}</ul>
+                    </div>`;
+                }).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function saveRate(cat) {
+            const val = parseFloat(String(document.getElementById('rate-val-' + cat).value).replace(',', '.'));
+            const from = document.getElementById('rate-from-' + cat).value || getTodayISO();
+            if (!Number.isFinite(val) || val < 0) {
+                showToast('Tariffa non valida');
+                return;
+            }
+            const hist = state.rateHistory[cat].filter(e => e.from !== from);
+            hist.push({ from, rate: Math.round(val * 100) / 100 });
+            state.rateHistory[cat] = normalizeRateHistory({ [cat]: hist })[cat];
+            persistChanges();
+            renderSettings();
+            renderWorkView();
+            renderPayments();
+            showToast('Tariffa salvata');
         }
 
         function syncHeaderHeight() {
@@ -1607,7 +1757,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-base font-bold text-slate-900 leading-tight">Ambulatorio</h3>
-                                        <span class="text-xs font-semibold text-teal-700 tabular-nums">${RATES.ambulatorio} € / seduta</span>
+                                        <span class="text-xs font-semibold text-teal-700 tabular-nums">${curRate('ambulatorio')} € / seduta</span>
                                     </div>
                                 </div>
                                 <span class="text-base font-extrabold text-slate-900 tabular-nums">${formatCurrency(ds.ambEuro)}</span>
@@ -1628,11 +1778,6 @@
                                 </button>
                             </div>
                         </div>
-
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                            <span>Subtotale giornata</span>
-                            <span class="font-bold text-slate-800 tabular-nums">${formatCurrency(ds.ambEuro)}</span>
-                        </div>
                     </div>
 
                     <!-- DOMICILIARI (26€): RSA APERTA + ADI -->
@@ -1645,7 +1790,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-base font-bold text-slate-900 leading-tight">Domiciliari</h3>
-                                        <span class="text-xs font-semibold text-blue-700 tabular-nums">${RATES.domiciliari} € / accesso</span>
+                                        <span class="text-xs font-semibold text-blue-700 tabular-nums">${curRate('domiciliari')} € / accesso</span>
                                     </div>
                                 </div>
                                 <span class="text-base font-extrabold text-slate-900 tabular-nums">${formatCurrency(ds.domEuro)}</span>
@@ -1655,7 +1800,7 @@
                                 <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
                                     <div>
                                         <span class="text-sm font-bold text-slate-900 block">RSA aperta</span>
-                                        <span class="text-[11px] font-medium text-slate-500 tabular-nums">${formatCurrency(ds.domRsaCount * RATES.domiciliari)}</span>
+                                        <span class="text-[11px] font-medium text-slate-500 tabular-nums">${formatCurrency(ds.domRsaCount * rateFor('domiciliari', state.selectedDate))}</span>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <button type="button" onclick="updateDomiciliari('rsa', -1)" aria-label="Riduci RSA aperta"
@@ -1673,7 +1818,7 @@
                                 <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
                                     <div>
                                         <span class="text-sm font-bold text-slate-900 block">ADI</span>
-                                        <span class="text-[11px] font-medium text-slate-500 tabular-nums">${formatCurrency(ds.domAdiCount * RATES.domiciliari)}</span>
+                                        <span class="text-[11px] font-medium text-slate-500 tabular-nums">${formatCurrency(ds.domAdiCount * rateFor('domiciliari', state.selectedDate))}</span>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <button type="button" onclick="updateDomiciliari('adi', -1)" aria-label="Riduci ADI"
@@ -1689,11 +1834,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                            <span>Totale domiciliari (${ds.domCount} ${ds.domCount === 1 ? 'accesso' : 'accessi'})</span>
-                            <span class="font-bold text-slate-800 tabular-nums">${formatCurrency(ds.domEuro)}</span>
-                        </div>
                     </div>
 
                     <!-- PRIVATI (50€) -->
@@ -1706,7 +1846,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-base font-bold text-slate-900 leading-tight">Privati</h3>
-                                        <span class="text-xs font-semibold text-indigo-700 tabular-nums">${RATES.privati} € / seduta</span>
+                                        <span class="text-xs font-semibold text-indigo-700 tabular-nums">${curRate('privati')} € / seduta</span>
                                     </div>
                                 </div>
                                 <span class="text-base font-extrabold text-slate-900 tabular-nums">${formatCurrency(ds.privEuro)}</span>
@@ -1744,11 +1884,6 @@
                                     ${todayPrivateChipsHTML}
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                            <span>Subtotale privati giornata</span>
-                            <span class="font-bold text-slate-800 tabular-nums">${formatCurrency(ds.privEuro)}</span>
                         </div>
                     </div>
                 `;
@@ -1812,7 +1947,7 @@
                     dates.push({
                         date: dateKey,
                         count: cnt,
-                        amount: cnt * RATES.privati
+                        amount: cnt * rateFor('privati', dateKey)
                     });
                 }
             });
@@ -1832,7 +1967,7 @@
 
             const patientsHTML = patientEntries.length > 0
                 ? patientEntries.map(([pName, pCount]) => {
-                    const pEuro = pCount * RATES.privati;
+                    const pEuro = ms.privateEuroByPatient[pName] || 0;
                     const pCollected = ms.collectedByPatient[pName] || 0;
                     return `
                         <button type="button" onclick="openPatientDetailModal('${escapeAttr(pName)}')"
@@ -1920,7 +2055,7 @@
                         <div>
                             <span class="text-xs font-semibold text-teal-800 block">Totale maturato mese</span>
                             <span class="text-2xl font-extrabold text-teal-950 tabular-nums">${formatCurrency(ms.ambEuro)}</span>
-                            <span class="text-xs text-teal-700 block mt-0.5 tabular-nums">${ms.ambCount} sedute (${RATES.ambulatorio} € / seduta)</span>
+                            <span class="text-xs text-teal-700 block mt-0.5 tabular-nums">${ms.ambCount} sedute (${curRate('ambulatorio')} € / seduta)</span>
                         </div>
                         ${renderCollectionBadge(ms.ambEuro, ms.collectedAmb)}
                     </div>
@@ -1973,7 +2108,7 @@
                 const entries = Object.entries(ms.privateByPatient).sort((a, b) => a[0].localeCompare(b[0], 'it'));
                 const listHTML = entries.length > 0
                     ? entries.map(([pName, pCount]) => {
-                        const pEuro = pCount * RATES.privati;
+                        const pEuro = ms.privateEuroByPatient[pName] || 0;
                         const pCollected = ms.collectedByPatient[pName] || 0;
                         return `
                             <button type="button" onclick="closeModal('category-detail-modal'); openPatientDetailModal('${escapeAttr(pName)}');"
@@ -2019,7 +2154,7 @@
             const monthPrefix = state.selectedDate.slice(0, 7);
             const sessions = getPatientTreatmentDates(monthPrefix, patientName);
             const totalCount = sessions.reduce((acc, s) => acc + s.count, 0);
-            const totalEuro = totalCount * RATES.privati;
+            const totalEuro = sessions.reduce((acc, x) => acc + x.amount, 0);
 
             document.getElementById('patient-detail-title').textContent = patientName;
             document.getElementById('patient-detail-subtitle').textContent = `${getMonthLabelIT(monthPrefix)} · Trattamenti privati`;
@@ -2037,7 +2172,7 @@
                 <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-200/80">
                     <span class="text-xs font-semibold text-indigo-800 block">Totale maturato del paziente</span>
                     <span class="text-2xl font-extrabold text-indigo-950 tabular-nums mt-0.5 block">${formatCurrency(totalEuro)}</span>
-                    <span class="text-xs text-indigo-700 tabular-nums">${totalCount} ${totalCount === 1 ? 'seduta effettuata' : 'sedute effettuate'} (${RATES.privati} € / seduta)</span>
+                    <span class="text-xs text-indigo-700 tabular-nums">${totalCount} ${totalCount === 1 ? 'seduta effettuata' : 'sedute effettuate'} (${curRate('privati')} € / seduta)</span>
                 </div>
 
                 <div>
@@ -2080,7 +2215,7 @@
                 optionsHTML += `<optgroup label="Paziente Privato del Mese">`;
                 allMonthPatients.forEach(pName => {
                     const cnt = ms.privateByPatient[pName] || 0;
-                    const euro = cnt * RATES.privati;
+                    const euro = ms.privateEuroByPatient[pName] || 0;
                     optionsHTML += `<option value="patient:${escapeHTML(pName)}">${escapeHTML(pName)} — ${formatCurrency(euro)} (${cnt} sed.)</option>`;
                 });
                 optionsHTML += `</optgroup>`;
@@ -2120,7 +2255,7 @@
             } else if (sourceVal.startsWith('patient:')) {
                 const pName = sourceVal.replace('patient:', '');
                 const cnt = ms.privateByPatient[pName] || 0;
-                const euro = cnt * RATES.privati;
+                const euro = ms.privateEuroByPatient[pName] || 0;
                 catSelect.value = 'Privati';
                 amountInput.value = euro > 0 ? euro.toFixed(2) : '';
                 noteInput.value = `${pName} (${getMonthLabelIT(monthPrefix)})`;
@@ -2393,7 +2528,8 @@
                 dailyLogs: state.dailyLogs,
                 patients: state.patients,
                 selectedPrivatePatient: state.selectedPrivatePatient,
-                payments: state.payments
+                payments: state.payments,
+                settings: { rateHistory: state.rateHistory }
             };
         }
 
@@ -2490,6 +2626,7 @@
                     populateYearFilter();
                     renderPayments();
                     renderWorkView();
+                    closeModal('settings-modal');
                     showToast('Backup ripristinato con successo');
                 } catch (err) {
                     console.error('Errore importazione JSON:', err);
@@ -2531,6 +2668,7 @@
         // ==========================================
         window.addEventListener('DOMContentLoaded', () => {
             loadState();
+            applyTheme();
             state.cloudUrl = ''; // versione offline: nessun dato lascia il telefono
             populateYearFilter();
             renderWorkView();
