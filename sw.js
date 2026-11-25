@@ -1,6 +1,6 @@
 // Service worker: permette l'uso completamente offline.
 // Se modifichi i file dell'app, cambia il numero di versione qui sotto.
-const CACHE = 'fisioconto-v1';
+const CACHE = 'fisioconto-v2';
 const FILES = [
   './',
   './index.html',
@@ -12,7 +12,7 @@ const FILES = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {

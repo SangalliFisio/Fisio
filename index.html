@@ -61,13 +61,6 @@
                 </nav>
             </div>
 
-            <!-- Stato ultimo backup -->
-            <button type="button" onclick="shareBackup()" title="Salva un backup (Drive)"
-                class="mx-auto sm:mx-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer shrink-0 border-slate-200 bg-slate-100 text-slate-600"
-                id="backup-pill">
-                <span id="backup-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-                <span id="backup-text">Backup</span>
-            </button>
         </div>
     </header>
 
@@ -76,36 +69,46 @@
     <!-- ========================================== -->
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-5 space-y-6">
 
+        <!-- Stato ultimo backup (scorre con la pagina) -->
+        <div class="flex justify-center -mb-2">
+            <button type="button" onclick="shareBackup()" title="Salva un backup (Drive)"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer shrink-0 border-slate-200 bg-slate-100 text-slate-600"
+                id="backup-pill">
+                <span id="backup-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                <span id="backup-text">Backup</span>
+            </button>
+        </div>
+
         <!-- ========================================== -->
         <!-- 2. SCHEDA CONTEGGIO LAVORO                 -->
         <!-- ========================================== -->
         <section id="view-work" class="space-y-5">
 
-            <!-- Barra Navigazione Date Fissa in Alto -->
-            <div class="sticky top-16 z-20 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl p-2.5 sm:p-3 shadow-sm">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-1.5 sm:gap-2">
-                        <button type="button" onclick="changeSelectedDate(-1)" title="Giorno precedente"
-                            class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                        </button>
+            <!-- Barra Navigazione Date: bloccata in alto, sotto l'intestazione -->
+            <div id="date-bar-wrap" class="sticky z-20 -mx-4 px-4 pt-1 pb-2 bg-slate-50" style="top: var(--header-h, 4rem)">
+                <div class="bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-3 shadow-sm">
+                    <div class="flex flex-col items-center gap-1.5">
+                        <div class="flex items-center justify-center gap-1.5 sm:gap-2">
+                            <button type="button" onclick="changeSelectedDate(-1)" title="Giorno precedente"
+                                class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                            </button>
 
-                        <input type="date" id="work-date-input" onchange="onDateInputChange(event)"
-                            class="bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 tabular-nums cursor-pointer">
+                            <input type="date" id="work-date-input" onchange="onDateInputChange(event)"
+                                class="bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 tabular-nums cursor-pointer">
 
-                        <button type="button" onclick="changeSelectedDate(1)" title="Giorno successivo"
-                            class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                        </button>
+                            <button type="button" onclick="changeSelectedDate(1)" title="Giorno successivo"
+                                class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </button>
 
-                        <button type="button" onclick="goToToday()"
-                            class="px-3 py-2 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-colors cursor-pointer shrink-0">
-                            Oggi
-                        </button>
-                    </div>
+                            <button type="button" onclick="goToToday()"
+                                class="px-3 py-2 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-colors cursor-pointer shrink-0">
+                                Oggi
+                            </button>
+                        </div>
 
-                    <div class="text-right px-1">
-                        <span id="selected-date-label" class="text-xs sm:text-sm font-semibold text-slate-600 capitalize block"></span>
+                        <span id="selected-date-label" class="text-xs sm:text-sm font-semibold text-slate-600 capitalize block text-center"></span>
                     </div>
                 </div>
             </div>
@@ -118,6 +121,15 @@
             <!-- Griglia delle 3 Tipologie di Lavoro -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="services-container">
                 <!-- Popolato dinamicamente da JS -->
+            </div>
+
+            <!-- Azzera la giornata selezionata -->
+            <div class="pt-2 pb-6 flex justify-center">
+                <button type="button" onclick="resetCurrentDay()"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 active:scale-95 text-rose-700 text-sm font-semibold transition-all cursor-pointer">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span>Azzera giornata</span>
+                </button>
             </div>
 
         </section>
@@ -216,7 +228,7 @@
                         <label class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
                             <i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-amber-600"></i>
                             <span>Ripristina</span>
-                            <input type="file" id="import-json-input" accept=".json,application/json" onchange="importBackupJSON(event)" class="hidden">
+                            <input type="file" id="import-json-input" onchange="importBackupJSON(event)" class="hidden">
                         </label>
                         <button type="button" onclick="exportPaymentsCSV()"
                             class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
@@ -1275,6 +1287,36 @@
             closeModal('category-detail-modal');
             closeModal('patient-detail-modal');
             renderWorkView();
+        }
+
+        function resetCurrentDay() {
+            const key = state.selectedDate;
+            const stats = getDayStats(key);
+
+            if (stats.totalCount === 0) {
+                showToast('Nessun conteggio da azzerare in questo giorno');
+                return;
+            }
+
+            const ok = confirm(
+                'Azzerare la giornata di ' + formatDateExtendedIT(key) + '?\n\n' +
+                'Verranno cancellate ' + stats.totalCount + ' prestazioni (' + formatCurrency(stats.totalEuro) + ').\n' +
+                'L\'operazione non si può annullare.'
+            );
+            if (!ok) return;
+
+            delete state.dailyLogs[key];
+            persistChanges();
+            renderWorkView();
+            showToast('Giornata azzerata');
+        }
+
+        function syncHeaderHeight() {
+            const header = document.querySelector('header');
+            if (!header) return;
+            const raw = Math.floor(header.getBoundingClientRect().height);
+            if (!raw) return;
+            document.documentElement.style.setProperty('--header-h', (raw - 1) + 'px');
         }
 
         function updateAmbulatorio(delta) {
@@ -2378,7 +2420,7 @@
             }
             txt.textContent = label;
 
-            const base = 'mx-auto sm:mx-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer shrink-0 ';
+            const base = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer shrink-0 ';
             if (level === 'ok') {
                 pill.className = base + 'border-emerald-200 bg-emerald-50 text-emerald-800';
                 dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
@@ -2389,11 +2431,13 @@
         }
 
         async function shareBackup() {
-            const fileName = `backup_fisioterapista_${getTodayISO()}.json`;
+            // Android/Chrome permette di condividere solo alcuni tipi di file (testo si', .json no):
+            // il backup e' lo stesso JSON, salvato con estensione .txt
+            const fileName = `backup_fisioterapista_${getTodayISO()}.txt`;
             const json = JSON.stringify(buildBackupPayload(), null, 2);
 
             try {
-                const file = new File([json], fileName, { type: 'application/json' });
+                const file = new File([json], fileName, { type: 'text/plain' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({ files: [file], title: 'Backup gestionale' });
                     markBackupDone();
@@ -2404,6 +2448,7 @@
                 if (err && err.name === 'AbortError') return; // annullato dall'utente
                 console.error('Condivisione non riuscita, scarico il file:', err);
             }
+            showToast('Condivisione non disponibile: scarico il file');
             exportBackupJSON();
         }
 
@@ -2492,12 +2537,26 @@
             renderBackupPill();
             lucide.createIcons();
 
+            syncHeaderHeight();
+            window.addEventListener('resize', syncHeaderHeight);
+            if (window.ResizeObserver) {
+                new ResizeObserver(syncHeaderHeight).observe(document.querySelector('header'));
+            }
+
             // Chiede al browser di non cancellare i dati in caso di poco spazio
             if (navigator.storage && navigator.storage.persist) {
                 navigator.storage.persist().catch(() => {});
             }
 
             if ('serviceWorker' in navigator) {
+                const hadController = !!navigator.serviceWorker.controller;
+                let reloaded = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    // nuova versione dell'app installata: ricarica (i dati sono gia' salvati)
+                    if (!hadController || reloaded) return;
+                    reloaded = true;
+                    window.location.reload();
+                });
                 navigator.serviceWorker.register('sw.js').catch(err => console.error('Service worker:', err));
             }
         });
