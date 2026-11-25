@@ -1,10 +1,11 @@
 // Service worker: permette l'uso completamente offline.
 // Se modifichi i file dell'app, cambia il numero di versione qui sotto.
-const CACHE = 'fisiolog-v3';
+const CACHE = 'fisiolog-v4';
 const FILES = [
   './',
   './index.html',
   './tailwind.css',
+  './fonts.css',
   './lucide.min.js',
   './manifest.webmanifest',
   './icon-192.png',

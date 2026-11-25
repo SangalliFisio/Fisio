@@ -6,10 +6,11 @@
     <title>FisioLog</title>
     <meta name="theme-color" content="#0d9488">
     <link rel="manifest" href="manifest.webmanifest">
-    <script>try{var _s=JSON.parse(localStorage.getItem("fisioconto_settings_v1")||"{}");if(_s.theme==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
+    <script>try{var _s=JSON.parse(localStorage.getItem("fisioconto_settings_v1")||"{}");if(_s.theme==="dark")document.documentElement.classList.add("dark");if(_s.font)document.documentElement.dataset.font=_s.font}catch(e){}</script>
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="tailwind.css">
+    <link rel="stylesheet" href="fonts.css">
     <script src="lucide.min.js"></script>
     <style>
         body {
@@ -34,6 +35,18 @@
             -moz-appearance: textfield;
         }
 
+
+        *, *::before, *::after { text-transform: uppercase !important; }
+        .pc-soft { background: var(--bg); border: 1px solid var(--bd); color: var(--tx); }
+        .pc-btn { background: var(--ac); color: #fff; }
+        .pc-mid { color: var(--mid); }
+        .pc-ico { background: var(--bg); color: var(--ac); }
+        .pc-dot { background: var(--ac); }
+        html[data-font="moderno"] body { font-family: 'Poppins', sans-serif; }
+        html[data-font="morbido"] body { font-family: 'Nunito', sans-serif; }
+        html[data-font="elegante"] body { font-family: 'Lora', Georgia, serif; }
+        html[data-font="tecnico"] body { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+        html[data-font="moderno"], html[data-font="tecnico"] { font-size: 15px; }
         html.dark { color-scheme: dark; }
         html.dark body { background: #0b1220; color: #e2e8f0; }
         html.dark .bg-white, html.dark [class*="bg-white/"] { background-color: #162032; }
@@ -70,7 +83,7 @@
         <div class="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2.5">
             <div class="flex items-center gap-2.5 sm:gap-4">
                 <button type="button" onclick="handleTopIconClick()" title="Torna in alto"
-                    class="w-10 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white hidden sm:flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0">
+                    class="w-10 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0">
                     <i data-lucide="activity" class="w-5 h-5"></i>
                 </button>
 
@@ -78,12 +91,12 @@
                     <button id="tab-work" type="button" onclick="switchTab('work')"
                         class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-teal-700 shadow-xs cursor-pointer">
                         <i data-lucide="clipboard-list" class="w-4 h-4"></i>
-                        <span>Conteggio Lavoro</span>
+                        <span class="sm:hidden">Lavoro</span><span class="hidden sm:inline">Conteggio Lavoro</span>
                     </button>
                     <button id="tab-payments" type="button" onclick="switchTab('payments')"
                         class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
                         <i data-lucide="wallet" class="w-4 h-4"></i>
-                        <span>Registro Incassi</span>
+                        <span class="sm:hidden">Incassi</span><span class="hidden sm:inline">Registro Incassi</span>
                     </button>
                 </nav>
             </div>
@@ -189,20 +202,7 @@
                     </div>
                 </div>
 
-                <div class="mt-3.5 space-y-2 text-xs">
-                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-teal-50/70 border border-teal-100">
-                        <span class="font-bold text-teal-950">Ambulatorio</span>
-                        <span id="kpi-ambulatorio" class="font-extrabold text-teal-950 text-sm tabular-nums">0,00 €</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-blue-50/70 border border-blue-100">
-                        <span class="font-bold text-blue-950">Domiciliari</span>
-                        <span id="kpi-domiciliari" class="font-extrabold text-blue-950 text-sm tabular-nums">0,00 €</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-100">
-                        <span class="font-bold text-indigo-950">Privati</span>
-                        <span id="kpi-privati" class="font-extrabold text-indigo-950 text-sm tabular-nums">0,00 €</span>
-                    </div>
-                </div>
+                <div id="kpi-cats" class="mt-3.5 space-y-2 text-xs"></div>
 
                 <button type="button" onclick="openQuickPaymentModal('month')"
                     class="mt-3.5 w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
@@ -214,16 +214,7 @@
             <!-- Elenco Incassi + Filtri Categoria -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
                 <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <button type="button" data-cat="Tutti" onclick="setCategoryFilter('Tutti')"
-                            class="cat-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white cursor-pointer">Tutti</button>
-                        <button type="button" data-cat="Ambulatorio" onclick="setCategoryFilter('Ambulatorio')"
-                            class="cat-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">Ambulatorio</button>
-                        <button type="button" data-cat="Domiciliari" onclick="setCategoryFilter('Domiciliari')"
-                            class="cat-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">Domiciliari</button>
-                        <button type="button" data-cat="Privati" onclick="setCategoryFilter('Privati')"
-                            class="cat-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">Privati</button>
-                    </div>
+                    <div id="cat-filters" class="flex flex-wrap items-center gap-1.5"></div>
                 </div>
 
                 <!-- Riepilogo 12 Mesi (visibile quando Mese = Tutti i mesi) -->
@@ -236,44 +227,69 @@
 
     </main>
 
-    <!-- MODALE: IMPOSTAZIONI -->
+    <!-- MODALI: IMPOSTAZIONI, TARIFFE, CATEGORIA, INFO -->
     <div id="settings-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl border border-slate-100 animate-fade-in max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-start justify-between gap-3 mb-4">
                 <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="settings" class="w-5 h-5 text-teal-600"></i>Impostazioni</h3>
-                <button type="button" onclick="closeModal('settings-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+                <button type="button" onclick="closeModal('settings-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-
             <div class="space-y-5">
                 <div>
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Aspetto</h4>
                     <div id="settings-theme" class="grid grid-cols-2 gap-2"></div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mt-3 mb-2">Stile del testo</h4>
+                    <div id="settings-fonts" class="grid grid-cols-2 gap-2"></div>
                 </div>
-
+                <button type="button" onclick="openRatesModal()" class="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 border-teal-500 bg-teal-50 text-teal-800 text-sm font-bold cursor-pointer">
+                    <span class="flex items-center gap-2"><i data-lucide="euro" class="w-4 h-4"></i>Tariffe</span><i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
                 <div>
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Tariffe</h4>
-                    <p class="text-[11px] text-slate-500 mb-2">Una nuova tariffa vale dalla data scelta in poi: i giorni precedenti restano al vecchio prezzo.</p>
-                    <div id="settings-rates" class="space-y-2.5"></div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Categorie e sottocategorie</h4>
+                    <div id="settings-cats" class="space-y-2.5"></div>
                 </div>
-
                 <div>
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dati</h4>
                     <div class="flex flex-wrap gap-2">
-                        <button type="button" onclick="shareBackup()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                            <i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i><span>Backup su Drive</span>
-                        </button>
-                        <label class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                            <i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-amber-600"></i><span>Ripristina</span>
-                            <input type="file" id="import-json-input" onchange="importBackupJSON(event)" class="hidden">
-                        </label>
-                        <button type="button" onclick="exportPaymentsCSV()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                            <i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i><span>Esporta CSV</span>
-                        </button>
+                        <button type="button" onclick="shareBackup()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer"><i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i><span>Backup su Drive</span></button>
+                        <label class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer"><i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-amber-600"></i><span>Ripristina</span><input type="file" id="import-json-input" onchange="importBackupJSON(event)" class="hidden"></label>
+                        <button type="button" onclick="exportPaymentsCSV()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer"><i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i><span>Esporta CSV</span></button>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="rates-modal" class="fixed inset-0 z-[60] hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl border border-slate-100 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div><h3 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="euro" class="w-5 h-5 text-teal-600"></i>Tariffe</h3><p class="text-[11px] text-slate-500 mt-0.5">Una nuova tariffa vale dalla data scelta in poi: i giorni precedenti restano al vecchio prezzo.</p></div>
+                <button type="button" onclick="closeModal('rates-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="rates-body" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="cat-form-modal" class="fixed inset-0 z-[70] hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl border border-slate-100 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <h3 id="cat-form-title" class="text-lg font-bold text-slate-900"></h3>
+                <button type="button" onclick="closeModal('cat-form-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="saveCatForm(event)" class="space-y-4">
+                <div id="cat-form-body" class="space-y-4"></div>
+                <button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold cursor-pointer">Salva</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="info-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl border border-slate-100 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div><h3 id="info-title" class="text-lg font-bold text-slate-900"></h3><p id="info-subtitle" class="text-xs text-slate-500 mt-0.5"></p></div>
+                <button type="button" onclick="closeModal('info-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="info-content" class="space-y-2"></div>
         </div>
     </div>
 
@@ -657,25 +673,7 @@
         const RATE_DEFAULTS = { ambulatorio: 14, domiciliari: 26, privati: 50 };
 
         // Tariffa valida in una certa data: le tariffe passate restano "congelate"
-        function rateFor(cat, dateKey) {
-            const hist = (state.rateHistory && state.rateHistory[cat]) || [{ from: '0000-01-01', rate: RATE_DEFAULTS[cat] }];
-            let r = hist[0].rate;
-            hist.forEach(e => { if (e.from <= dateKey) r = e.rate; });
-            return r;
-        }
-        function curRate(cat) { return rateFor(cat, getTodayISO()); }
 
-        function normalizeRateHistory(raw) {
-            const out = {};
-            Object.keys(RATE_DEFAULTS).forEach(k => {
-                let h = raw && Array.isArray(raw[k]) ? raw[k].filter(e => e && typeof e.from === 'string' && Number.isFinite(Number(e.rate))).map(e => ({ from: e.from, rate: Number(e.rate) })) : [];
-                if (!h.length) h = [{ from: '0000-01-01', rate: RATE_DEFAULTS[k] }];
-                h.sort((x, y) => (x.from < y.from ? -1 : 1));
-                h[0].from = '0000-01-01';
-                out[k] = h;
-            });
-            return out;
-        }
 
         const STORAGE_KEYS = {
             dailyLogs: 'fisioconto_daily_logs_v2',
@@ -702,6 +700,8 @@
             selectedPrivatePatient: DEFAULT_PATIENTS[0],
             payments: [],
             theme: 'light',
+            font: 'classico',
+            categories: null,
             rateHistory: null,
             categoryFilter: 'Tutti',
             updatedAt: null,
@@ -774,7 +774,7 @@
                 patients: state.patients,
                 selectedPrivatePatient: state.selectedPrivatePatient,
                 payments: state.payments,
-                settings: { rateHistory: state.rateHistory }
+                settings: getSettingsObj()
             };
         }
 
@@ -794,9 +794,8 @@
             if (Array.isArray(dataObj.payments)) {
                 state.payments = dataObj.payments;
             }
-            if (dataObj.settings && dataObj.settings.rateHistory) {
-                state.rateHistory = normalizeRateHistory(dataObj.settings.rateHistory);
-            }
+            applySettingsObj(dataObj.settings, false);
+            migrateData();
             if (timestampISO) {
                 state.updatedAt = timestampISO;
             }
@@ -805,7 +804,7 @@
                 localStorage.setItem(STORAGE_KEYS.dailyLogs, JSON.stringify(state.dailyLogs));
                 localStorage.setItem(STORAGE_KEYS.patients, JSON.stringify(state.patients));
                 localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(state.payments));
-                localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify({ theme: state.theme, rateHistory: state.rateHistory }));
+                localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(getSettingsObj(true)));
                 localStorage.setItem(STORAGE_KEYS.meta, JSON.stringify({
                     updatedAt: state.updatedAt,
                     deviceId: state.deviceId,
@@ -824,7 +823,7 @@
                 localStorage.setItem(STORAGE_KEYS.dailyLogs, JSON.stringify(state.dailyLogs));
                 localStorage.setItem(STORAGE_KEYS.patients, JSON.stringify(state.patients));
                 localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(state.payments));
-                localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify({ theme: state.theme, rateHistory: state.rateHistory }));
+                localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(getSettingsObj(true)));
                 localStorage.setItem(STORAGE_KEYS.meta, JSON.stringify({
                     updatedAt: state.updatedAt,
                     deviceId: state.deviceId,
@@ -1052,12 +1051,11 @@
 
             try {
                 const rawSettings = localStorage.getItem(STORAGE_KEYS.settings);
-                const st = rawSettings ? JSON.parse(rawSettings) : {};
-                state.theme = st && st.theme === 'dark' ? 'dark' : 'light';
-                state.rateHistory = normalizeRateHistory(st && st.rateHistory);
+                applySettingsObj(rawSettings ? JSON.parse(rawSettings) : {}, true);
             } catch (e) {
-                state.rateHistory = normalizeRateHistory(null);
+                applySettingsObj({}, true);
             }
+            migrateData();
 
             setCloudStatus(state.cloudUrl ? 'Sincronizzato' : 'Cloud non configurato');
         }
@@ -1166,138 +1164,8 @@
         // ==========================================
         // DATI GIORNALIERI E MENSILI
         // ==========================================
-        function getDayRecord(dateKey) {
-            if (!state.dailyLogs[dateKey] || typeof state.dailyLogs[dateKey] !== 'object') {
-                state.dailyLogs[dateKey] = {
-                    ambulatorio: 0,
-                    domiciliariRsa: 0,
-                    domiciliariAdi: 0,
-                    privati: {}
-                };
-            }
-            const rec = state.dailyLogs[dateKey];
-            if (typeof rec.ambulatorio !== 'number' || Number.isNaN(rec.ambulatorio)) rec.ambulatorio = 0;
-            if (typeof rec.domiciliariRsa !== 'number' || Number.isNaN(rec.domiciliariRsa)) rec.domiciliariRsa = 0;
-            if (typeof rec.domiciliariAdi !== 'number' || Number.isNaN(rec.domiciliariAdi)) rec.domiciliariAdi = 0;
-            if (!rec.privati || typeof rec.privati !== 'object') rec.privati = {};
-            return rec;
-        }
 
-        function getDayStats(dateKey) {
-            const rec = getDayRecord(dateKey);
-            const ambCount = Math.max(0, Number(rec.ambulatorio) || 0);
-            const domRsaCount = Math.max(0, Number(rec.domiciliariRsa) || 0);
-            const domAdiCount = Math.max(0, Number(rec.domiciliariAdi) || 0);
-            const domCount = domRsaCount + domAdiCount;
-            const privCount = Object.values(rec.privati).reduce((acc, v) => acc + Math.max(0, Number(v) || 0), 0);
 
-            const ambEuro = ambCount * rateFor('ambulatorio', dateKey);
-            const domEuro = domCount * rateFor('domiciliari', dateKey);
-            const privEuro = privCount * rateFor('privati', dateKey);
-
-            return {
-                ambCount,
-                domRsaCount,
-                domAdiCount,
-                domCount,
-                privCount,
-                totalCount: ambCount + domCount + privCount,
-                ambEuro,
-                domEuro,
-                privEuro,
-                totalEuro: ambEuro + domEuro + privEuro
-            };
-        }
-
-        function getMonthStats(yearMonthPrefix) {
-            let ambCount = 0;
-            let domRsaCount = 0;
-            let domAdiCount = 0;
-            let privCount = 0;
-            const privateByPatient = {};
-            const privateEuroByPatient = {};
-            let ambEuro = 0, domRsaEuro = 0, domAdiEuro = 0, domEuro = 0, privEuro = 0;
-            const daysBreakdown = [];
-
-            Object.keys(state.dailyLogs).sort().forEach(dateKey => {
-                if (dateKey.startsWith(yearMonthPrefix)) {
-                    const ds = getDayStats(dateKey);
-                    const rec = getDayRecord(dateKey);
-                    if (ds.totalCount > 0) {
-                        ambCount += ds.ambCount;
-                        domRsaCount += ds.domRsaCount;
-                        domAdiCount += ds.domAdiCount;
-                        privCount += ds.privCount;
-                        ambEuro += ds.ambEuro;
-                        domEuro += ds.domEuro;
-                        privEuro += ds.privEuro;
-                        domRsaEuro += ds.domRsaCount * rateFor('domiciliari', dateKey);
-                        domAdiEuro += ds.domAdiCount * rateFor('domiciliari', dateKey);
-
-                        Object.entries(rec.privati).forEach(([pName, pCount]) => {
-                            const countNum = Number(pCount) || 0;
-                            if (countNum > 0) {
-                                privateByPatient[pName] = (privateByPatient[pName] || 0) + countNum;
-                                privateEuroByPatient[pName] = (privateEuroByPatient[pName] || 0) + countNum * rateFor('privati', dateKey);
-                            }
-                        });
-
-                        daysBreakdown.push({
-                            date: dateKey,
-                            ...ds
-                        });
-                    }
-                }
-            });
-
-            const domCount = domRsaCount + domAdiCount;
-
-            let collectedAmb = 0;
-            let collectedDom = 0;
-            let collectedPriv = 0;
-            const collectedByPatient = {};
-
-            state.payments.forEach(p => {
-                if (!p || !p.date || !p.date.startsWith(yearMonthPrefix)) return;
-                const amt = Number(p.amount) || 0;
-                if (p.category === 'Ambulatorio') {
-                    collectedAmb += amt;
-                } else if (p.category === 'Domiciliari') {
-                    collectedDom += amt;
-                } else if (p.category === 'Privati') {
-                    collectedPriv += amt;
-                    const noteLower = (p.note || '').toLowerCase();
-                    Object.keys(privateByPatient).forEach(pName => {
-                        if (noteLower.includes(pName.toLowerCase())) {
-                            collectedByPatient[pName] = (collectedByPatient[pName] || 0) + amt;
-                        }
-                    });
-                }
-            });
-
-            return {
-                ambCount,
-                domRsaCount,
-                domAdiCount,
-                domCount,
-                privCount,
-                totalCount: ambCount + domCount + privCount,
-                ambEuro,
-                domRsaEuro,
-                domAdiEuro,
-                domEuro,
-                privEuro,
-                totalEuro: ambEuro + domEuro + privEuro,
-                collectedAmb,
-                collectedDom,
-                collectedPriv,
-                collectedTotal: collectedAmb + collectedDom + collectedPriv,
-                collectedByPatient,
-                privateByPatient,
-                privateEuroByPatient,
-                daysBreakdown
-            };
-        }
 
         function renderCollectionBadge(earnedEuro, collectedEuro) {
             if (earnedEuro <= 0) {
@@ -1384,6 +1252,7 @@
         // ==========================================
         function applyTheme() {
             document.documentElement.classList.toggle('dark', state.theme === 'dark');
+            document.documentElement.dataset.font = state.font;
             const meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#0b1220' : '#0d9488');
         }
@@ -1395,71 +1264,8 @@
             renderSettings();
         }
 
-        function openSettingsModal() {
-            renderSettings();
-            document.getElementById('settings-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
 
-        function renderSettings() {
-            const themeEl = document.getElementById('settings-theme');
-            if (themeEl) {
-                const on = 'border-teal-500 bg-teal-50 text-teal-800';
-                const off = 'border-slate-200 bg-white text-slate-600';
-                themeEl.innerHTML = [['light', 'Chiaro', 'sun'], ['dark', 'Scuro', 'moon']].map(([k, label, icon]) => `
-                    <button type="button" onclick="setTheme('${k}')"
-                        class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-bold cursor-pointer transition-colors ${state.theme === k ? on : off}">
-                        <i data-lucide="${icon}" class="w-4 h-4"></i><span>${label}</span>
-                    </button>`).join('');
-            }
 
-            const ratesEl = document.getElementById('settings-rates');
-            if (ratesEl) {
-                const inp = 'bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-2 focus:ring-teal-500 tabular-nums';
-                ratesEl.innerHTML = [['ambulatorio', 'Ambulatorio', 'seduta'], ['domiciliari', 'Domiciliari (RSA aperta e ADI)', 'accesso'], ['privati', 'Privati', 'seduta']].map(([k, label, unit]) => {
-                    const hist = state.rateHistory[k].map(e =>
-                        `<li>${e.from === '0000-01-01' ? 'Iniziale' : 'dal ' + formatDateShortIT(e.from)}: <b>${formatCurrency(e.rate)}</b></li>`).join('');
-                    return `
-                    <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-sm font-bold text-slate-900">${label}</span>
-                            <span class="text-xs text-slate-500 tabular-nums">oggi ${formatCurrency(curRate(k))} / ${unit}</span>
-                        </div>
-                        <div class="flex flex-wrap items-end gap-2 mt-2">
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Nuova tariffa (€)</label>
-                                <input id="rate-val-${k}" type="number" step="0.01" min="0" inputmode="decimal" value="${curRate(k)}" class="w-24 ${inp}">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Valida dal</label>
-                                <input id="rate-from-${k}" type="date" value="${getTodayISO()}" class="${inp}">
-                            </div>
-                            <button type="button" onclick="saveRate('${k}')"
-                                class="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer">Salva</button>
-                        </div>
-                        <ul class="mt-2 text-[11px] text-slate-500 space-y-0.5">${hist}</ul>
-                    </div>`;
-                }).join('');
-            }
-            lucide.createIcons();
-        }
-
-        function saveRate(cat) {
-            const val = parseFloat(String(document.getElementById('rate-val-' + cat).value).replace(',', '.'));
-            const from = document.getElementById('rate-from-' + cat).value || getTodayISO();
-            if (!Number.isFinite(val) || val < 0) {
-                showToast('Tariffa non valida');
-                return;
-            }
-            const hist = state.rateHistory[cat].filter(e => e.from !== from);
-            hist.push({ from, rate: Math.round(val * 100) / 100 });
-            state.rateHistory[cat] = normalizeRateHistory({ [cat]: hist })[cat];
-            persistChanges();
-            renderSettings();
-            renderWorkView();
-            renderPayments();
-            showToast('Tariffa salvata');
-        }
 
         function syncHeaderHeight() {
             const header = document.querySelector('header');
@@ -1469,23 +1275,7 @@
             document.documentElement.style.setProperty('--header-h', (raw - 1) + 'px');
         }
 
-        function updateAmbulatorio(delta) {
-            const rec = getDayRecord(state.selectedDate);
-            rec.ambulatorio = Math.max(0, (rec.ambulatorio || 0) + delta);
-            persistChanges();
-            renderWorkView();
-        }
 
-        function updateDomiciliari(subType, delta) {
-            const rec = getDayRecord(state.selectedDate);
-            if (subType === 'rsa') {
-                rec.domiciliariRsa = Math.max(0, (rec.domiciliariRsa || 0) + delta);
-            } else {
-                rec.domiciliariAdi = Math.max(0, (rec.domiciliariAdi || 0) + delta);
-            }
-            persistChanges();
-            renderWorkView();
-        }
 
         function onPrivatePatientSelectChange(e) {
             state.selectedPrivatePatient = e.target.value;
@@ -1634,308 +1424,10 @@
         // ==========================================
         // RENDER SCHEDA CONTEGGIO LAVORO
         // ==========================================
-        function renderWorkView() {
-            const dateInput = document.getElementById('work-date-input');
-            const dateLabel = document.getElementById('selected-date-label');
-            if (dateInput) dateInput.value = state.selectedDate;
-            if (dateLabel) dateLabel.textContent = formatDateExtendedIT(state.selectedDate);
-
-            const monthPrefix = state.selectedDate.slice(0, 7);
-            const ms = getMonthStats(monthPrefix);
-
-            const monthCard = document.getElementById('month-summary-card');
-            if (monthCard) {
-                monthCard.innerHTML = `
-                    <div>
-                        <div class="flex items-center justify-center gap-3 pb-3.5 border-b border-slate-100">
-                            <button type="button" onclick="changeSelectedMonth(-1)" title="Mese precedente"
-                                class="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                            </button>
-                            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 capitalize min-w-[150px] text-center tabular-nums">
-                                ${escapeHTML(getMonthLabelIT(monthPrefix))}
-                            </h2>
-                            <button type="button" onclick="changeSelectedMonth(1)" title="Mese successivo"
-                                class="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-
-                        <div class="mt-3.5">
-                            <span class="text-xs font-medium text-slate-500">Totale maturato nel mese</span>
-                            <div class="flex flex-wrap items-baseline justify-between gap-2 mt-0.5">
-                                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">${formatCurrency(ms.totalEuro)}</div>
-                                ${renderCollectionBadge(ms.totalEuro, ms.collectedTotal)}
-                            </div>
-                        </div>
-
-                        <div class="mt-3.5 space-y-2 text-xs">
-                            <button type="button" onclick="openCategoryDetailModal('Ambulatorio')"
-                                class="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-teal-50/70 hover:bg-teal-100/80 border border-teal-100 transition-colors cursor-pointer text-left">
-                                <div>
-                                    <span class="font-bold text-teal-950 block">Ambulatorio</span>
-                                    <span class="text-[11px] text-teal-700 tabular-nums">${ms.ambCount} sedute · ${renderCollectionBadge(ms.ambEuro, ms.collectedAmb)}</span>
-                                </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <span class="font-extrabold text-teal-950 text-sm tabular-nums">${formatCurrency(ms.ambEuro)}</span>
-                                    <i data-lucide="chevron-right" class="w-4 h-4 text-teal-700"></i>
-                                </div>
-                            </button>
-
-                            <button type="button" onclick="openCategoryDetailModal('Domiciliari')"
-                                class="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-100 transition-colors cursor-pointer text-left">
-                                <div>
-                                    <span class="font-bold text-blue-950 block">Domiciliari</span>
-                                    <span class="text-[11px] text-blue-700 tabular-nums">${ms.domCount} accessi (RSA ${ms.domRsaCount} · ADI ${ms.domAdiCount})</span>
-                                </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <span class="font-extrabold text-blue-950 text-sm tabular-nums">${formatCurrency(ms.domEuro)}</span>
-                                    <i data-lucide="chevron-right" class="w-4 h-4 text-blue-700"></i>
-                                </div>
-                            </button>
-
-                            <button type="button" onclick="openCategoryDetailModal('Privati')"
-                                class="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-indigo-50/70 hover:bg-indigo-100/80 border border-indigo-100 transition-colors cursor-pointer text-left">
-                                <div>
-                                    <span class="font-bold text-indigo-950 block">Privati</span>
-                                    <span class="text-[11px] text-indigo-700 tabular-nums">${ms.privCount} sedute · ${Object.keys(ms.privateByPatient).length} pazienti</span>
-                                </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <span class="font-extrabold text-indigo-950 text-sm tabular-nums">${formatCurrency(ms.privEuro)}</span>
-                                    <i data-lucide="chevron-right" class="w-4 h-4 text-indigo-700"></i>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-slate-100">
-                        <button type="button" onclick="openMonthDetailModal()"
-                            class="py-2 px-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold leading-tight text-center transition-all cursor-pointer">
-                            Dettaglio<br><span class="font-semibold text-slate-600">Giorni</span>
-                        </button>
-                        <button type="button" onclick="openMonthSummaryModal()"
-                            class="py-2 px-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold leading-tight text-center transition-all cursor-pointer">
-                            Dettaglio<br><span class="font-semibold text-slate-600">Mese</span>
-                        </button>
-                        <button type="button" onclick="openQuickPaymentModal('month')"
-                            class="py-2 px-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold leading-tight text-center shadow-xs transition-all cursor-pointer">
-                            Incassa<br><span class="font-semibold text-teal-100">Mese</span>
-                        </button>
-                    </div>
-                `;
-            }
-
-            const ds = getDayStats(state.selectedDate);
-            const rec = getDayRecord(state.selectedDate);
-
-            if (!state.patients.includes(state.selectedPrivatePatient)) {
-                state.selectedPrivatePatient = state.patients[0] || 'Paziente 1';
-            }
-            const activePatient = state.selectedPrivatePatient;
-            const activePatientDayCount = rec.privati[activePatient] || 0;
-
-            const todayPrivateEntries = Object.entries(rec.privati).filter(([, c]) => (Number(c) || 0) > 0);
-            const todayPrivateChipsHTML = todayPrivateEntries.length > 0
-                ? todayPrivateEntries.map(([pName, c]) => `
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200/80 text-xs font-semibold text-indigo-900">
-                        <span>${escapeHTML(pName)}</span>
-                        <span class="px-1.5 py-0.2 rounded bg-indigo-600 text-white text-[11px] font-bold tabular-nums">${c}</span>
-                    </span>
-                `).join('')
-                : `<span class="text-xs text-slate-400">Nessun paziente privato registrato in questa data</span>`;
-
-            const servicesContainer = document.getElementById('services-container');
-            if (servicesContainer) {
-                servicesContainer.innerHTML = `
-                    <!-- AMBULATORIO (14€) -->
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">
-                                        <i data-lucide="stethoscope" class="w-5 h-5"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-base font-bold text-slate-900 leading-tight">Ambulatorio</h3>
-                                        <span class="text-xs font-semibold text-teal-700 tabular-nums">${curRate('ambulatorio')} € / seduta</span>
-                                    </div>
-                                </div>
-                                <span class="text-base font-extrabold text-slate-900 tabular-nums">${formatCurrency(ds.ambEuro)}</span>
-                            </div>
-
-                            <div class="flex items-center justify-between gap-3 my-6">
-                                <button type="button" onclick="updateAmbulatorio(-1)" aria-label="Riduci sedute ambulatorio"
-                                    class="w-12 h-12 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                                    <i data-lucide="minus" class="w-5 h-5"></i>
-                                </button>
-                                <div class="text-center">
-                                    <span class="text-3xl font-extrabold text-slate-900 tabular-nums block leading-none">${ds.ambCount}</span>
-                                    <span class="text-xs font-medium text-slate-500 mt-1 block">${ds.ambCount === 1 ? 'seduta' : 'sedute'}</span>
-                                </div>
-                                <button type="button" onclick="updateAmbulatorio(1)" aria-label="Aumenta sedute ambulatorio"
-                                    class="w-12 h-12 rounded-2xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-all cursor-pointer shrink-0">
-                                    <i data-lucide="plus" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- DOMICILIARI (26€): RSA APERTA + ADI -->
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                                        <i data-lucide="home" class="w-5 h-5"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-base font-bold text-slate-900 leading-tight">Domiciliari</h3>
-                                        <span class="text-xs font-semibold text-blue-700 tabular-nums">${curRate('domiciliari')} € / accesso</span>
-                                    </div>
-                                </div>
-                                <span class="text-base font-extrabold text-slate-900 tabular-nums">${formatCurrency(ds.domEuro)}</span>
-                            </div>
-
-                            <div class="space-y-3 my-4">
-                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
-                                    <div>
-                                        <span class="text-sm font-bold text-slate-900 block">RSA aperta</span>
-                                        <span class="text-[11px] font-medium text-slate-500 tabular-nums">${formatCurrency(ds.domRsaCount * rateFor('domiciliari', state.selectedDate))}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <button type="button" onclick="updateDomiciliari('rsa', -1)" aria-label="Riduci RSA aperta"
-                                            class="w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 active:scale-95 text-slate-800 flex items-center justify-center transition-all cursor-pointer">
-                                            <i data-lucide="minus" class="w-4 h-4"></i>
-                                        </button>
-                                        <span class="w-7 text-center text-lg font-extrabold text-slate-900 tabular-nums">${ds.domRsaCount}</span>
-                                        <button type="button" onclick="updateDomiciliari('rsa', 1)" aria-label="Aumenta RSA aperta"
-                                            class="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-all cursor-pointer">
-                                            <i data-lucide="plus" class="w-4 h-4"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
-                                    <div>
-                                        <span class="text-sm font-bold text-slate-900 block">ADI</span>
-                                        <span class="text-[11px] font-medium text-slate-500 tabular-nums">${formatCurrency(ds.domAdiCount * rateFor('domiciliari', state.selectedDate))}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <button type="button" onclick="updateDomiciliari('adi', -1)" aria-label="Riduci ADI"
-                                            class="w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 active:scale-95 text-slate-800 flex items-center justify-center transition-all cursor-pointer">
-                                            <i data-lucide="minus" class="w-4 h-4"></i>
-                                        </button>
-                                        <span class="w-7 text-center text-lg font-extrabold text-slate-900 tabular-nums">${ds.domAdiCount}</span>
-                                        <button type="button" onclick="updateDomiciliari('adi', 1)" aria-label="Aumenta ADI"
-                                            class="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-all cursor-pointer">
-                                            <i data-lucide="plus" class="w-4 h-4"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PRIVATI (50€) -->
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
-                                        <i data-lucide="user-check" class="w-5 h-5"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-base font-bold text-slate-900 leading-tight">Privati</h3>
-                                        <span class="text-xs font-semibold text-indigo-700 tabular-nums">${curRate('privati')} € / seduta</span>
-                                    </div>
-                                </div>
-                                <span class="text-base font-extrabold text-slate-900 tabular-nums">${formatCurrency(ds.privEuro)}</span>
-                            </div>
-
-                            <div class="mt-3.5 flex items-center gap-2">
-                                <select id="private-patient-select" onchange="onPrivatePatientSelectChange(event)"
-                                    class="flex-1 bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
-                                    ${state.patients.map(p => `<option value="${escapeHTML(p)}" ${p === activePatient ? 'selected' : ''}>${escapeHTML(p)}</option>`).join('')}
-                                </select>
-                                <button type="button" onclick="openPatientsModal()"
-                                    class="px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-xs font-bold transition-colors cursor-pointer shrink-0">
-                                    + Nuovo / Gestisci
-                                </button>
-                            </div>
-
-                            <div class="flex items-center justify-between gap-3 my-4">
-                                <button type="button" onclick="updatePrivatePatientCount(-1)" aria-label="Riduci seduta paziente selezionato"
-                                    class="w-11 h-11 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                                    <i data-lucide="minus" class="w-5 h-5"></i>
-                                </button>
-                                <div class="text-center">
-                                    <span class="text-2xl font-extrabold text-slate-900 tabular-nums block leading-none">${activePatientDayCount}</span>
-                                    <span class="text-[11px] font-medium text-slate-500 mt-1 block truncate max-w-[140px]">${escapeHTML(activePatient)}</span>
-                                </div>
-                                <button type="button" onclick="updatePrivatePatientCount(1)" aria-label="Aumenta seduta paziente selezionato"
-                                    class="w-11 h-11 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-all cursor-pointer shrink-0">
-                                    <i data-lucide="plus" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-
-                            <div class="pt-2 border-t border-slate-100">
-                                <span class="text-[11px] font-semibold text-slate-500 block mb-1.5">Pazienti trattati oggi (${ds.privCount})</span>
-                                <div class="flex flex-wrap gap-1.5">
-                                    ${todayPrivateChipsHTML}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            lucide.createIcons();
-        }
 
         // ==========================================
         // MODALI DETTAGLIO GIORNI / MESE / CATEGORIA / PAZIENTE
         // ==========================================
-        function openMonthDetailModal() {
-            const monthPrefix = state.selectedDate.slice(0, 7);
-            const ms = getMonthStats(monthPrefix);
-
-            document.getElementById('month-detail-subtitle').textContent =
-                `${getMonthLabelIT(monthPrefix)} · ${ms.daysBreakdown.length} giorni lavorati · ${formatCurrency(ms.totalEuro)}`;
-
-            const container = document.getElementById('month-detail-content');
-            if (ms.daysBreakdown.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-slate-500 text-sm">
-                        Nessuna prestazione registrata in questo mese.
-                    </div>
-                `;
-            } else {
-                container.innerHTML = ms.daysBreakdown.map(d => {
-                    const parts = [];
-                    if (d.ambCount > 0) parts.push(`Amb ${d.ambCount}`);
-                    if (d.domRsaCount > 0) parts.push(`RSA ${d.domRsaCount}`);
-                    if (d.domAdiCount > 0) parts.push(`ADI ${d.domAdiCount}`);
-                    if (d.privCount > 0) parts.push(`Priv ${d.privCount}`);
-
-                    return `
-                        <button type="button" onclick="selectDateFromModal('${d.date}')"
-                            class="w-full p-3 rounded-xl border border-slate-200 hover:border-teal-300 hover:bg-teal-50/40 transition-colors flex items-center justify-between gap-3 text-left cursor-pointer">
-                            <div>
-                                <span class="text-sm font-bold text-slate-900 capitalize block">${formatDateExtendedIT(d.date)}</span>
-                                <span class="text-xs text-slate-500 tabular-nums">${parts.join(' · ')}</span>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <span class="text-sm font-extrabold text-slate-900 tabular-nums block">${formatCurrency(d.totalEuro)}</span>
-                                <span class="text-[11px] font-semibold text-teal-700">Apri giorno →</span>
-                            </div>
-                        </button>
-                    `;
-                }).join('');
-            }
-
-            document.getElementById('month-detail-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
 
         function getPatientTreatmentDates(yearMonthPrefix, patientName) {
             const dates = [];
@@ -1954,387 +1446,16 @@
             return dates;
         }
 
-        function openMonthSummaryModal() {
-            const monthPrefix = state.selectedDate.slice(0, 7);
-            const ms = getMonthStats(monthPrefix);
-            const avgPerDay = ms.daysBreakdown.length > 0 ? ms.totalEuro / ms.daysBreakdown.length : 0;
 
-            document.getElementById('month-summary-subtitle').textContent =
-                `${getMonthLabelIT(monthPrefix)} · Riepilogo maturato e pazienti privati`;
 
-            const patientEntries = Object.entries(ms.privateByPatient)
-                .sort((a, b) => a[0].localeCompare(b[0], 'it'));
-
-            const patientsHTML = patientEntries.length > 0
-                ? patientEntries.map(([pName, pCount]) => {
-                    const pEuro = ms.privateEuroByPatient[pName] || 0;
-                    const pCollected = ms.collectedByPatient[pName] || 0;
-                    return `
-                        <button type="button" onclick="openPatientDetailModal('${escapeAttr(pName)}')"
-                            class="w-full p-3 rounded-xl border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-100/70 transition-colors flex items-center justify-between gap-2 text-left cursor-pointer">
-                            <div>
-                                <span class="text-sm font-bold text-indigo-950 block">${escapeHTML(pName)}</span>
-                                <span class="text-xs text-indigo-700 tabular-nums">${pCount} ${pCount === 1 ? 'seduta' : 'sedute'} · ${renderCollectionBadge(pEuro, pCollected)}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <span class="text-sm font-extrabold text-indigo-950 tabular-nums">${formatCurrency(pEuro)}</span>
-                                <i data-lucide="chevron-right" class="w-4 h-4 text-indigo-700"></i>
-                            </div>
-                        </button>
-                    `;
-                }).join('')
-                : `<p class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200/70">Nessun paziente privato registrato nel mese.</p>`;
-
-            document.getElementById('month-summary-content').innerHTML = `
-                <div class="grid grid-cols-3 gap-2.5">
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                        <span class="text-[11px] font-medium text-slate-500 block">Maturato Mese</span>
-                        <span class="text-base font-extrabold text-slate-900 tabular-nums mt-0.5 block">${formatCurrency(ms.totalEuro)}</span>
-                    </div>
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                        <span class="text-[11px] font-medium text-slate-500 block">Giorni Lavorati</span>
-                        <span class="text-base font-extrabold text-slate-900 tabular-nums mt-0.5 block">${ms.daysBreakdown.length}</span>
-                    </div>
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                        <span class="text-[11px] font-medium text-slate-500 block">Media / Giorno</span>
-                        <span class="text-base font-extrabold text-slate-900 tabular-nums mt-0.5 block">${formatCurrency(avgPerDay)}</span>
-                    </div>
-                </div>
-
-                <div class="p-3.5 rounded-xl border border-slate-200/80 space-y-2 text-xs">
-                    <div class="flex items-center justify-between">
-                        <span class="font-semibold text-slate-700">Ambulatorio (${ms.ambCount} sedute)</span>
-                        <span class="font-bold text-slate-900 tabular-nums">${formatCurrency(ms.ambEuro)}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="font-semibold text-slate-700">Domiciliari (${ms.domCount} accessi: RSA ${ms.domRsaCount}, ADI ${ms.domAdiCount})</span>
-                        <span class="font-bold text-slate-900 tabular-nums">${formatCurrency(ms.domEuro)}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="font-semibold text-slate-700">Privati (${ms.privCount} sedute)</span>
-                        <span class="font-bold text-slate-900 tabular-nums">${formatCurrency(ms.privEuro)}</span>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pazienti Privati del Mese (clicca per date e incasso)</h4>
-                    <div class="space-y-2">${patientsHTML}</div>
-                </div>
-            `;
-
-            document.getElementById('month-summary-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function openCategoryDetailModal(category) {
-            const monthPrefix = state.selectedDate.slice(0, 7);
-            const ms = getMonthStats(monthPrefix);
-
-            const titleEl = document.getElementById('category-detail-title');
-            const subEl = document.getElementById('category-detail-subtitle');
-            const contentEl = document.getElementById('category-detail-content');
-            const payBtn = document.getElementById('category-detail-pay-btn');
-
-            subEl.textContent = `${getMonthLabelIT(monthPrefix)}`;
-
-            if (category === 'Ambulatorio') {
-                titleEl.textContent = 'Ambulatorio';
-                const dayRows = ms.daysBreakdown.filter(d => d.ambCount > 0);
-                const daysHTML = dayRows.length > 0
-                    ? dayRows.map(d => `
-                        <button type="button" onclick="selectDateFromModal('${d.date}')"
-                            class="w-full p-2.5 rounded-xl border border-slate-200 hover:bg-teal-50/40 flex items-center justify-between text-left text-xs cursor-pointer">
-                            <span class="font-semibold text-slate-800 capitalize">${formatDateExtendedIT(d.date)}</span>
-                            <span class="font-bold text-teal-800 tabular-nums">${d.ambCount} sedute · ${formatCurrency(d.ambEuro)}</span>
-                        </button>
-                    `).join('')
-                    : `<p class="text-xs text-slate-500">Nessuna seduta in ambulatorio questo mese.</p>`;
-
-                contentEl.innerHTML = `
-                    <div class="p-4 rounded-xl bg-teal-50 border border-teal-200/80 flex items-center justify-between">
-                        <div>
-                            <span class="text-xs font-semibold text-teal-800 block">Totale maturato mese</span>
-                            <span class="text-2xl font-extrabold text-teal-950 tabular-nums">${formatCurrency(ms.ambEuro)}</span>
-                            <span class="text-xs text-teal-700 block mt-0.5 tabular-nums">${ms.ambCount} sedute (${curRate('ambulatorio')} € / seduta)</span>
-                        </div>
-                        ${renderCollectionBadge(ms.ambEuro, ms.collectedAmb)}
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Dettaglio giornate del mese</h4>
-                        <div class="space-y-1.5">${daysHTML}</div>
-                    </div>
-                `;
-                payBtn.onclick = () => {
-                    closeModal('category-detail-modal');
-                    openQuickPaymentModal('ambulatorio');
-                };
-            } else if (category === 'Domiciliari') {
-                titleEl.textContent = 'Domiciliari';
-                const dayRows = ms.daysBreakdown.filter(d => d.domCount > 0);
-                const daysHTML = dayRows.length > 0
-                    ? dayRows.map(d => `
-                        <button type="button" onclick="selectDateFromModal('${d.date}')"
-                            class="w-full p-2.5 rounded-xl border border-slate-200 hover:bg-blue-50/40 flex items-center justify-between text-left text-xs cursor-pointer">
-                            <div>
-                                <span class="font-semibold text-slate-800 capitalize block">${formatDateExtendedIT(d.date)}</span>
-                                <span class="text-[11px] text-slate-500 tabular-nums">RSA aperta: ${d.domRsaCount} · ADI: ${d.domAdiCount}</span>
-                            </div>
-                            <span class="font-bold text-blue-900 tabular-nums">${d.domCount} accessi · ${formatCurrency(d.domEuro)}</span>
-                        </button>
-                    `).join('')
-                    : `<p class="text-xs text-slate-500">Nessun accesso domiciliare questo mese.</p>`;
-
-                contentEl.innerHTML = `
-                    <div class="p-4 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-between">
-                        <div>
-                            <span class="text-xs font-semibold text-blue-800 block">Totale maturato mese</span>
-                            <span class="text-2xl font-extrabold text-blue-950 tabular-nums">${formatCurrency(ms.domEuro)}</span>
-                            <span class="text-xs text-blue-700 block mt-0.5 tabular-nums">${ms.domCount} accessi (RSA aperta: ${ms.domRsaCount} · ADI: ${ms.domAdiCount})</span>
-                        </div>
-                        ${renderCollectionBadge(ms.domEuro, ms.collectedDom)}
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Dettaglio giornate del mese</h4>
-                        <div class="space-y-1.5">${daysHTML}</div>
-                    </div>
-                `;
-                payBtn.onclick = () => {
-                    closeModal('category-detail-modal');
-                    openQuickPaymentModal('domiciliari');
-                };
-            } else {
-                // Privati: nasconde la voce "Dettaglio giornate del mese"
-                titleEl.textContent = 'Privati';
-                const entries = Object.entries(ms.privateByPatient).sort((a, b) => a[0].localeCompare(b[0], 'it'));
-                const listHTML = entries.length > 0
-                    ? entries.map(([pName, pCount]) => {
-                        const pEuro = ms.privateEuroByPatient[pName] || 0;
-                        const pCollected = ms.collectedByPatient[pName] || 0;
-                        return `
-                            <button type="button" onclick="closeModal('category-detail-modal'); openPatientDetailModal('${escapeAttr(pName)}');"
-                                class="w-full p-3 rounded-xl border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-100/70 flex items-center justify-between text-left cursor-pointer">
-                                <div>
-                                    <span class="text-sm font-bold text-indigo-950 block">${escapeHTML(pName)}</span>
-                                    <span class="text-xs text-indigo-700 tabular-nums">${pCount} ${pCount === 1 ? 'seduta' : 'sedute'} · ${renderCollectionBadge(pEuro, pCollected)}</span>
-                                </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <span class="text-sm font-extrabold text-indigo-950 tabular-nums">${formatCurrency(pEuro)}</span>
-                                    <i data-lucide="chevron-right" class="w-4 h-4 text-indigo-700"></i>
-                                </div>
-                            </button>
-                        `;
-                    }).join('')
-                    : `<p class="text-xs text-slate-500">Nessun paziente privato registrato questo mese.</p>`;
-
-                contentEl.innerHTML = `
-                    <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-between">
-                        <div>
-                            <span class="text-xs font-semibold text-indigo-800 block">Totale maturato mese</span>
-                            <span class="text-2xl font-extrabold text-indigo-950 tabular-nums">${formatCurrency(ms.privEuro)}</span>
-                            <span class="text-xs text-indigo-700 block mt-0.5 tabular-nums">${ms.privCount} sedute · ${entries.length} pazienti</span>
-                        </div>
-                        ${renderCollectionBadge(ms.privEuro, ms.collectedPriv)}
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Riepilogo pazienti del mese</h4>
-                        <div class="space-y-2">${listHTML}</div>
-                    </div>
-                `;
-                payBtn.onclick = () => {
-                    closeModal('category-detail-modal');
-                    openQuickPaymentModal('privati');
-                };
-            }
-
-            document.getElementById('category-detail-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function openPatientDetailModal(patientName) {
-            const monthPrefix = state.selectedDate.slice(0, 7);
-            const sessions = getPatientTreatmentDates(monthPrefix, patientName);
-            const totalCount = sessions.reduce((acc, s) => acc + s.count, 0);
-            const totalEuro = sessions.reduce((acc, x) => acc + x.amount, 0);
-
-            document.getElementById('patient-detail-title').textContent = patientName;
-            document.getElementById('patient-detail-subtitle').textContent = `${getMonthLabelIT(monthPrefix)} · Trattamenti privati`;
-
-            const datesHTML = sessions.length > 0
-                ? sessions.map(s => `
-                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                        <span class="font-semibold text-slate-800 capitalize">${formatDateExtendedIT(s.date)}</span>
-                        <span class="font-bold text-indigo-900 tabular-nums">${s.count} ${s.count === 1 ? 'seduta' : 'sedute'} · ${formatCurrency(s.amount)}</span>
-                    </div>
-                `).join('')
-                : `<p class="text-xs text-slate-500">Nessuna seduta in questo mese.</p>`;
-
-            document.getElementById('patient-detail-content').innerHTML = `
-                <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-200/80">
-                    <span class="text-xs font-semibold text-indigo-800 block">Totale maturato del paziente</span>
-                    <span class="text-2xl font-extrabold text-indigo-950 tabular-nums mt-0.5 block">${formatCurrency(totalEuro)}</span>
-                    <span class="text-xs text-indigo-700 tabular-nums">${totalCount} ${totalCount === 1 ? 'seduta effettuata' : 'sedute effettuate'} (${curRate('privati')} € / seduta)</span>
-                </div>
-
-                <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Date trattamenti effettuati</h4>
-                    <div class="space-y-1.5">${datesHTML}</div>
-                </div>
-            `;
-
-            const payBtn = document.getElementById('patient-detail-pay-btn');
-            payBtn.onclick = () => {
-                closeModal('patient-detail-modal');
-                openQuickPaymentModal('patient:' + patientName);
-            };
-
-            document.getElementById('patient-detail-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
 
         // ==========================================
         // REGISTRAZIONE E MODIFICA INCASSI
         // ==========================================
-        function openQuickPaymentModal(presetKey) {
-            const monthPrefix = state.selectedDate.slice(0, 7);
-            const ms = getMonthStats(monthPrefix);
-            const sourceSelect = document.getElementById('quick-pay-source');
 
-            let optionsHTML = `
-                <option value="month">Totale mese (${formatCurrency(ms.totalEuro)})</option>
-                <option value="ambulatorio">Ambulatorio mese (${formatCurrency(ms.ambEuro)})</option>
-                <option value="domiciliari">Domiciliari mese (${formatCurrency(ms.domEuro)})</option>
-                <option value="privati">Privati mese (${formatCurrency(ms.privEuro)})</option>
-            `;
 
-            const allMonthPatients = Array.from(new Set([
-                ...state.patients,
-                ...Object.keys(ms.privateByPatient)
-            ])).filter(p => (ms.privateByPatient[p] || 0) > 0);
 
-            if (allMonthPatients.length > 0) {
-                optionsHTML += `<optgroup label="Paziente Privato del Mese">`;
-                allMonthPatients.forEach(pName => {
-                    const cnt = ms.privateByPatient[pName] || 0;
-                    const euro = ms.privateEuroByPatient[pName] || 0;
-                    optionsHTML += `<option value="patient:${escapeHTML(pName)}">${escapeHTML(pName)} — ${formatCurrency(euro)} (${cnt} sed.)</option>`;
-                });
-                optionsHTML += `</optgroup>`;
-            }
 
-            sourceSelect.innerHTML = optionsHTML;
-            sourceSelect.value = presetKey || 'month';
-
-            document.getElementById('quick-pay-date').value = getTodayISO();
-            document.getElementById('quick-pay-note').value = '';
-            onQuickPaySourceChange();
-
-            document.getElementById('quick-payment-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function onQuickPaySourceChange() {
-            const sourceVal = document.getElementById('quick-pay-source').value;
-            const monthPrefix = state.selectedDate.slice(0, 7);
-            const ms = getMonthStats(monthPrefix);
-            const catSelect = document.getElementById('quick-pay-category');
-            const amountInput = document.getElementById('quick-pay-amount');
-            const noteInput = document.getElementById('quick-pay-note');
-
-            if (sourceVal === 'ambulatorio') {
-                catSelect.value = 'Ambulatorio';
-                amountInput.value = ms.ambEuro > 0 ? ms.ambEuro.toFixed(2) : '';
-                noteInput.value = `Ambulatorio ${getMonthLabelIT(monthPrefix)}`;
-            } else if (sourceVal === 'domiciliari') {
-                catSelect.value = 'Domiciliari';
-                amountInput.value = ms.domEuro > 0 ? ms.domEuro.toFixed(2) : '';
-                noteInput.value = `Domiciliari ${getMonthLabelIT(monthPrefix)}`;
-            } else if (sourceVal === 'privati') {
-                catSelect.value = 'Privati';
-                amountInput.value = ms.privEuro > 0 ? ms.privEuro.toFixed(2) : '';
-                noteInput.value = `Privati ${getMonthLabelIT(monthPrefix)}`;
-            } else if (sourceVal.startsWith('patient:')) {
-                const pName = sourceVal.replace('patient:', '');
-                const cnt = ms.privateByPatient[pName] || 0;
-                const euro = ms.privateEuroByPatient[pName] || 0;
-                catSelect.value = 'Privati';
-                amountInput.value = euro > 0 ? euro.toFixed(2) : '';
-                noteInput.value = `${pName} (${getMonthLabelIT(monthPrefix)})`;
-            } else {
-                catSelect.value = 'Ambulatorio';
-                amountInput.value = ms.totalEuro > 0 ? ms.totalEuro.toFixed(2) : '';
-                noteInput.value = `Maturato ${getMonthLabelIT(monthPrefix)}`;
-            }
-        }
-
-        function handleQuickPaymentSubmit(e) {
-            e.preventDefault();
-            const category = document.getElementById('quick-pay-category').value;
-            const amount = parseFloat(document.getElementById('quick-pay-amount').value);
-            const date = document.getElementById('quick-pay-date').value;
-            const note = document.getElementById('quick-pay-note').value.trim();
-
-            if (!date || Number.isNaN(amount) || amount <= 0) return;
-
-            state.payments.push({
-                id: 'pay_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-                category,
-                amount,
-                date,
-                note
-            });
-            persistChanges();
-            closeModal('quick-payment-modal');
-
-            const paymentsSectionVisible = !document.getElementById('view-payments').classList.contains('hidden');
-            if (paymentsSectionVisible) {
-                populateYearFilter();
-                renderPayments();
-            } else {
-                renderWorkView();
-            }
-            showToast('Incasso registrato');
-        }
-
-        function openEditPaymentModal(paymentId) {
-            const p = state.payments.find(item => item.id === paymentId);
-            if (!p) return;
-
-            document.getElementById('edit-pay-id').value = p.id;
-            document.getElementById('edit-pay-category').value = p.category || 'Privati';
-            document.getElementById('edit-pay-amount').value = Number(p.amount || 0).toFixed(2);
-            document.getElementById('edit-pay-date').value = p.date || getTodayISO();
-            document.getElementById('edit-pay-note').value = p.note || '';
-
-            document.getElementById('edit-payment-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function handleEditPaymentSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-pay-id').value;
-            const category = document.getElementById('edit-pay-category').value;
-            const amount = parseFloat(document.getElementById('edit-pay-amount').value);
-            const date = document.getElementById('edit-pay-date').value;
-            const note = document.getElementById('edit-pay-note').value.trim();
-
-            if (!id || !date || Number.isNaN(amount) || amount <= 0) return;
-
-            const idx = state.payments.findIndex(item => item.id === id);
-            if (idx !== -1) {
-                state.payments[idx] = {
-                    ...state.payments[idx],
-                    category,
-                    amount,
-                    date,
-                    note
-                };
-                persistChanges();
-                closeModal('edit-payment-modal');
-                populateYearFilter();
-                renderPayments();
-                showToast('Incasso aggiornato');
-            }
-        }
 
         function deletePayment(paymentId) {
             state.payments = state.payments.filter(item => item.id !== paymentId);
@@ -2369,142 +1490,8 @@
             }
         }
 
-        function setCategoryFilter(cat) {
-            state.categoryFilter = cat;
-            document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-                if (btn.dataset.cat === cat) {
-                    btn.className = 'cat-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white cursor-pointer';
-                } else {
-                    btn.className = 'cat-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
-                }
-            });
-            renderPayments();
-        }
 
-        function getFilteredPayments() {
-            const year = document.getElementById('filter-year').value;
-            const month = document.getElementById('filter-month').value;
-            const cat = state.categoryFilter;
 
-            return state.payments
-                .filter(p => {
-                    if (!p || !p.date) return false;
-                    if (year && !p.date.startsWith(year + '-')) return false;
-                    if (month && month !== 'all' && p.date.slice(5, 7) !== month) return false;
-                    if (cat && cat !== 'Tutti' && p.category !== cat) return false;
-                    return true;
-                })
-                .sort((a, b) => b.date.localeCompare(a.date));
-        }
-
-        function renderPayments() {
-            const year = document.getElementById('filter-year').value || state.selectedDate.slice(0, 4);
-            const month = document.getElementById('filter-month').value || 'all';
-            const cat = state.categoryFilter;
-
-            const periodPayments = state.payments.filter(p => {
-                if (!p || !p.date) return false;
-                if (!p.date.startsWith(year + '-')) return false;
-                if (month !== 'all' && p.date.slice(5, 7) !== month) return false;
-                return true;
-            });
-
-            let sumAmb = 0;
-            let sumDom = 0;
-            let sumPriv = 0;
-            periodPayments.forEach(p => {
-                const amt = Number(p.amount) || 0;
-                if (p.category === 'Ambulatorio') sumAmb += amt;
-                else if (p.category === 'Domiciliari') sumDom += amt;
-                else if (p.category === 'Privati') sumPriv += amt;
-            });
-
-            const filtered = getFilteredPayments();
-            const totalFilteredAmount = filtered.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
-
-            document.getElementById('kpi-total-collected').textContent = formatCurrency(totalFilteredAmount);
-            document.getElementById('kpi-total-count').textContent =
-                `${filtered.length} ${filtered.length === 1 ? 'incasso registrato' : 'incassi registrati'}`;
-            document.getElementById('kpi-ambulatorio').textContent = formatCurrency(sumAmb);
-            document.getElementById('kpi-domiciliari').textContent = formatCurrency(sumDom);
-            document.getElementById('kpi-privati').textContent = formatCurrency(sumPriv);
-
-            const annualBox = document.getElementById('annual-months-breakdown');
-            if (month === 'all') {
-                annualBox.classList.remove('hidden');
-                const monthsArr = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-                annualBox.innerHTML = `
-                    <div class="flex items-center justify-between mb-2.5">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600">
-                            Riepilogo 12 Mesi — ${escapeHTML(year)} ${cat !== 'Tutti' ? `(${escapeHTML(cat)})` : ''}
-                        </h3>
-                        <span class="text-[11px] text-slate-500">Clicca un mese per filtrarlo</span>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                        ${monthsArr.map(mCode => {
-                            const mSum = state.payments
-                                .filter(p => p.date && p.date.startsWith(`${year}-${mCode}-`) && (cat === 'Tutti' || p.category === cat))
-                                .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
-                            return `
-                                <button type="button" onclick="selectMonthFromAnnual('${mCode}')"
-                                    class="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-teal-400 transition-colors text-left cursor-pointer">
-                                    <span class="text-[11px] font-semibold text-slate-500 block">${getMonthNameIT(mCode).slice(0, 3)}</span>
-                                    <span class="text-xs sm:text-sm font-extrabold text-slate-900 tabular-nums mt-0.5 block">${formatCurrency(mSum)}</span>
-                                </button>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-            } else {
-                annualBox.classList.add('hidden');
-                annualBox.innerHTML = '';
-            }
-
-            const listContainer = document.getElementById('payments-list-container');
-            if (filtered.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="p-10 text-center text-slate-500 text-sm">
-                        Nessun incasso trovato per i filtri selezionati.
-                    </div>
-                `;
-            } else {
-                listContainer.innerHTML = filtered.map(p => {
-                    const badgeColor = p.category === 'Ambulatorio'
-                        ? 'bg-teal-100 text-teal-800'
-                        : p.category === 'Domiciliari'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-indigo-100 text-indigo-800';
-
-                    return `
-                        <div class="p-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors">
-                            <div class="space-y-1">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span class="text-sm font-bold text-slate-900 tabular-nums">${formatDateShortIT(p.date)}</span>
-                                    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badgeColor}">${escapeHTML(p.category)}</span>
-                                </div>
-                                ${p.note ? `<p class="text-xs text-slate-600">${escapeHTML(p.note)}</p>` : ''}
-                            </div>
-
-                            <div class="flex items-center justify-between sm:justify-end gap-3">
-                                <span class="text-base font-extrabold text-emerald-700 tabular-nums">${formatCurrency(p.amount)}</span>
-                                <div class="flex items-center gap-1">
-                                    <button type="button" onclick="openEditPaymentModal('${escapeAttr(p.id)}')" title="Modifica incasso"
-                                        class="p-2 rounded-lg text-slate-500 hover:text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer">
-                                        <i data-lucide="pencil" class="w-4 h-4"></i>
-                                    </button>
-                                    <button type="button" onclick="deletePayment('${escapeAttr(p.id)}')" title="Elimina incasso"
-                                        class="p-2 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            lucide.createIcons();
-        }
 
         function selectMonthFromAnnual(monthCode) {
             const monthSelect = document.getElementById('filter-month');
@@ -2529,7 +1516,7 @@
                 patients: state.patients,
                 selectedPrivatePatient: state.selectedPrivatePatient,
                 payments: state.payments,
-                settings: { rateHistory: state.rateHistory }
+                settings: getSettingsObj()
             };
         }
 
@@ -2638,29 +1625,926 @@
             reader.readAsText(file);
         }
 
-        function exportPaymentsCSV() {
+
+        // ==========================================
+        // CATEGORIE DINAMICHE, STATISTICHE E VISTE
+        // ==========================================
+        const PALETTES = {
+            red:    ['#fef2f2', '#fecaca', '#7f1d1d', '#dc2626', '#b91c1c', '#fca5a5'],
+            yellow: ['#fefce8', '#fde68a', '#713f12', '#ca8a04', '#a16207', '#fde047'],
+            brown:  ['#faf5f0', '#e7d5c3', '#4a2c17', '#8b5a2b', '#7a4a22', '#d6a77a'],
+            green:  ['#f0fdf4', '#bbf7d0', '#14532d', '#16a34a', '#15803d', '#86efac'],
+            blue:   ['#eff6ff', '#bfdbfe', '#1e3a8a', '#2563eb', '#1d4ed8', '#93c5fd'],
+            indigo: ['#eef2ff', '#c7d2fe', '#312e81', '#4f46e5', '#4338ca', '#a5b4fc'],
+            teal:   ['#f0fdfa', '#99f6e4', '#134e4a', '#0d9488', '#0f766e', '#5eead4'],
+            pink:   ['#fdf2f8', '#fbcfe8', '#831843', '#db2777', '#be185d', '#f9a8d4'],
+            gray:   ['#f8fafc', '#e2e8f0', '#0f172a', '#475569', '#334155', '#cbd5e1']
+        };
+        const PALETTE_NAMES = { red: 'Rosso', yellow: 'Giallo', brown: 'Marrone', green: 'Verde', blue: 'Blu', indigo: 'Indaco', teal: 'Verde acqua', pink: 'Rosa', gray: 'Grigio' };
+        const FONTS = {
+            classico: ['Classico', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'],
+            moderno:  ['Moderno', "'Poppins', sans-serif"],
+            morbido:  ['Morbido', "'Nunito', sans-serif"],
+            elegante: ['Elegante', "'Lora', Georgia, serif"],
+            tecnico:  ['Tecnico', "'JetBrains Mono', ui-monospace, monospace"]
+        };
+        const DEFAULT_CATEGORIES = [
+            { id: 'ambulatorio', name: 'Ambulatorio', color: 'red', mode: 'count', unit: 'seduta', deleted: false, subs: [] },
+            { id: 'domiciliari', name: 'Domiciliari', color: 'yellow', mode: 'count', unit: 'accesso', deleted: false,
+              subs: [{ id: 'rsa', name: 'RSA aperta', deleted: false }, { id: 'adi', name: 'ADI', deleted: false }] },
+            { id: 'privati', name: 'Privati', color: 'brown', mode: 'patients', unit: 'seduta', deleted: false, subs: [] }
+        ];
+
+        (function injectPalettes() {
+            const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(',');
+            const st = document.createElement('style');
+            st.textContent = Object.entries(PALETTES).map(([n, [bg, bd, tx, ac, mid, dk]]) =>
+                `.pal-${n}{--bg:${bg};--bd:${bd};--tx:${tx};--ac:${ac};--mid:${mid}}` +
+                `html.dark .pal-${n}{--bg:rgba(${rgb(ac)},.16);--bd:rgba(${rgb(ac)},.4);--tx:#f1f5f9;--mid:${dk}}`).join('');
+            document.head.appendChild(st);
+        })();
+
+        const fc = v => formatCurrency(v);
+        const catById = id => (state.categories || []).find(c => c.id === id);
+        const activeSubs = c => (c.subs || []).filter(s => !s.deleted);
+        function plural(u, n) {
+            if (n === 1) return u;
+            if (u.endsWith('a')) return u.slice(0, -1) + 'e';
+            if (u.endsWith('o') || u.endsWith('e')) return u.slice(0, -1) + 'i';
+            return u;
+        }
+        function keyLabel(key) {
+            const [ci, si] = key.split(':');
+            const c = catById(ci);
+            if (!c) return key;
+            const s = si ? (c.subs || []).find(x => x.id === si) : null;
+            return s ? s.name : c.name;
+        }
+        const visibleCats = ms => state.categories.filter(c => !c.deleted || (ms && ms.byCat[c.id]));
+
+        // ---- impostazioni salvate (categorie, tariffe, aspetto) ----
+        function getSettingsObj(withLook) {
+            const o = { categories: state.categories, rateHistory: state.rateHistory };
+            if (withLook) { o.theme = state.theme; o.font = state.font; }
+            return o;
+        }
+
+        function sanitizeCat(c) {
+            return {
+                id: String(c.id),
+                name: String(c.name || 'Categoria'),
+                color: PALETTES[c.color] ? c.color : 'gray',
+                mode: c.mode === 'patients' ? 'patients' : 'count',
+                unit: String(c.unit || 'prestazione'),
+                deleted: !!c.deleted,
+                subs: (Array.isArray(c.subs) ? c.subs : []).map(s => ({ id: String(s.id), name: String(s.name || 'Sottocategoria'), deleted: !!s.deleted }))
+            };
+        }
+
+        function normalizeRateHistory(raw) {
+            const out = {};
+            if (raw && typeof raw === 'object') {
+                Object.keys(raw).forEach(k => {
+                    const h = Array.isArray(raw[k]) ? raw[k].filter(e => e && typeof e.from === 'string' && Number.isFinite(Number(e.rate))).map(e => ({ from: e.from, rate: Number(e.rate) })) : [];
+                    if (h.length) { h.sort((a, b) => (a.from < b.from ? -1 : 1)); h[0].from = '0000-01-01'; out[k] = h; }
+                });
+            }
+            state.categories.forEach(c => {
+                if (!out[c.id]) out[c.id] = [{ from: '0000-01-01', rate: RATE_DEFAULTS[c.id] || 0 }];
+                (c.subs || []).forEach(s => {
+                    const k = c.id + ':' + s.id;
+                    if (!out[k]) out[k] = out[c.id].map(e => ({ ...e }));
+                });
+            });
+            return out;
+        }
+
+        function applySettingsObj(st, withLook) {
+            st = st && typeof st === 'object' ? st : {};
+            if (withLook) {
+                state.theme = st.theme === 'dark' ? 'dark' : 'light';
+                state.font = FONTS[st.font] ? st.font : 'classico';
+            }
+            if (Array.isArray(st.categories) && st.categories.length) {
+                state.categories = st.categories.map(sanitizeCat);
+            } else if (!state.categories) {
+                state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+            }
+            state.rateHistory = normalizeRateHistory(st.rateHistory || state.rateHistory);
+        }
+
+        function rateFor(key, dateKey) {
+            let h = state.rateHistory && state.rateHistory[key];
+            if (!h && key.includes(':')) h = state.rateHistory[key.split(':')[0]];
+            if (!h || !h.length) return 0;
+            let r = h[0].rate;
+            h.forEach(e => { if (e.from <= dateKey) r = e.rate; });
+            return r;
+        }
+        function curRate(key) { return rateFor(key, getTodayISO()); }
+
+        // ---- migrazione dal vecchio formato (ambulatorio / RSA / ADI fissi) ----
+        function migrateRec(rec) {
+            if (!rec.counts || typeof rec.counts !== 'object') rec.counts = {};
+            [['ambulatorio', 'ambulatorio'], ['domiciliariRsa', 'domiciliari:rsa'], ['domiciliariAdi', 'domiciliari:adi']].forEach(([old, key]) => {
+                if (old in rec) {
+                    const n = Number(rec[old]) || 0;
+                    if (n > 0) rec.counts[key] = (rec.counts[key] || 0) + n;
+                    delete rec[old];
+                }
+            });
+            if (!rec.privati || typeof rec.privati !== 'object') rec.privati = {};
+        }
+
+        function migrateData() {
+            Object.values(state.dailyLogs).forEach(rec => { if (rec && typeof rec === 'object') migrateRec(rec); });
+            state.payments.forEach(p => {
+                if (p && !p.cat) {
+                    const c = state.categories.find(x => x.name.toLowerCase() === String(p.category || '').toLowerCase());
+                    p.cat = c ? c.id : null;
+                }
+            });
+        }
+
+        function getDayRecord(dateKey) {
+            if (!state.dailyLogs[dateKey] || typeof state.dailyLogs[dateKey] !== 'object') {
+                state.dailyLogs[dateKey] = { counts: {}, privati: {} };
+            }
+            const rec = state.dailyLogs[dateKey];
+            migrateRec(rec);
+            return rec;
+        }
+
+        function getDayStats(dateKey) {
+            const rec = getDayRecord(dateKey);
+            const byCat = {};
+            let totalCount = 0, totalEuro = 0;
+            const add = (catId, key, n) => {
+                if (n <= 0) return;
+                const euro = n * rateFor(key, dateKey);
+                const b = byCat[catId] || (byCat[catId] = { count: 0, euro: 0, subs: {} });
+                const sv = b.subs[key] || (b.subs[key] = { count: 0, euro: 0 });
+                b.count += n; b.euro += euro; sv.count += n; sv.euro += euro;
+                totalCount += n; totalEuro += euro;
+            };
+            Object.entries(rec.counts).forEach(([k, v]) => add(k.split(':')[0], k, Math.max(0, Number(v) || 0)));
+            add('privati', 'privati', Object.values(rec.privati).reduce((a, v) => a + Math.max(0, Number(v) || 0), 0));
+            return { byCat, totalCount, totalEuro };
+        }
+
+        function getMonthStats(prefix) {
+            const byCat = {}, privateByPatient = {}, privateEuroByPatient = {}, daysBreakdown = [];
+            let totalCount = 0, totalEuro = 0;
+            Object.keys(state.dailyLogs).sort().forEach(dk => {
+                if (!dk.startsWith(prefix)) return;
+                const ds = getDayStats(dk);
+                if (!ds.totalCount) return;
+                totalCount += ds.totalCount; totalEuro += ds.totalEuro;
+                Object.entries(ds.byCat).forEach(([id, b]) => {
+                    const m = byCat[id] || (byCat[id] = { count: 0, euro: 0, subs: {} });
+                    m.count += b.count; m.euro += b.euro;
+                    Object.entries(b.subs).forEach(([k, sv]) => {
+                        const t = m.subs[k] || (m.subs[k] = { count: 0, euro: 0 });
+                        t.count += sv.count; t.euro += sv.euro;
+                    });
+                });
+                Object.entries(getDayRecord(dk).privati).forEach(([pn, c]) => {
+                    const n = Number(c) || 0;
+                    if (n > 0) {
+                        privateByPatient[pn] = (privateByPatient[pn] || 0) + n;
+                        privateEuroByPatient[pn] = (privateEuroByPatient[pn] || 0) + n * rateFor('privati', dk);
+                    }
+                });
+                daysBreakdown.push({ date: dk, ...ds });
+            });
+
+            // collected = incassi riferiti al maturato di questo mese; received = incassi con data in questo mese
+            const collectedByCat = {}, collectedByPatient = {}, receivedInMonth = [];
+            let collectedTotal = 0, receivedTotal = 0;
+            state.payments.forEach(p => {
+                if (!p || !p.date) return;
+                const amt = Number(p.amount) || 0;
+                if (p.date.startsWith(prefix)) { receivedInMonth.push(p); receivedTotal += amt; }
+                if ((p.forMonth || p.date.slice(0, 7)) !== prefix) return;
+                collectedTotal += amt;
+                const cid = p.cat || '?';
+                collectedByCat[cid] = (collectedByCat[cid] || 0) + amt;
+                if (p.cat === 'privati') {
+                    const nl = (p.note || '').toLowerCase();
+                    Object.keys(privateByPatient).forEach(pn => { if (nl.includes(pn.toLowerCase())) collectedByPatient[pn] = (collectedByPatient[pn] || 0) + amt; });
+                }
+            });
+            receivedInMonth.sort((a, b) => b.date.localeCompare(a.date));
+            return { byCat, totalCount, totalEuro, privateByPatient, privateEuroByPatient, daysBreakdown, collectedByCat, collectedTotal, collectedByPatient, receivedInMonth, receivedTotal };
+        }
+
+        function updateCount(key, delta) {
+            const rec = getDayRecord(state.selectedDate);
+            const n = Math.max(0, (Number(rec.counts[key]) || 0) + delta);
+            if (n === 0) delete rec.counts[key]; else rec.counts[key] = n;
+            persistChanges();
+            renderWorkView();
+        }
+
+        // ---- schermata lavoro ----
+        const BTN_MINUS = 'rounded-xl border border-slate-200 bg-white hover:bg-slate-100 active:scale-95 text-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0';
+        const BTN_PLUS = 'rounded-xl pc-btn active:scale-95 flex items-center justify-center shadow-xs transition-all cursor-pointer shrink-0';
+
+        function renderCategoryCard(c, ds, rec) {
+            const subs = activeSubs(c);
+            const b = ds.byCat[c.id] || { count: 0, euro: 0, subs: {} };
+            const rateTxt = (c.mode === 'patients' || !subs.length) ? `${rateFor(c.id, state.selectedDate)} € / ${escapeHTML(c.unit)}` : '';
+            const icon = c.mode === 'patients' ? 'user-check' : (subs.length ? 'home' : (c.id === 'ambulatorio' ? 'stethoscope' : 'activity'));
+            const head = `
+                <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-9 h-9 rounded-xl pc-ico flex items-center justify-center shrink-0"><i data-lucide="${icon}" class="w-5 h-5"></i></div>
+                        <div class="min-w-0">
+                            <h3 class="text-base font-bold text-slate-900 leading-tight truncate">${escapeHTML(c.name)}</h3>
+                            <span class="text-xs font-semibold pc-mid tabular-nums">${rateTxt}</span>
+                        </div>
+                    </div>
+                    <span class="text-base font-extrabold text-slate-900 tabular-nums">${fc(b.euro)}</span>
+                </div>`;
+
+            let body;
+            if (c.mode === 'patients') {
+                if (!state.patients.includes(state.selectedPrivatePatient)) state.selectedPrivatePatient = state.patients[0] || 'Paziente 1';
+                const ap = state.selectedPrivatePatient;
+                const apCount = rec.privati[ap] || 0;
+                const chips = Object.entries(rec.privati).filter(([, n]) => (Number(n) || 0) > 0).map(([pn, n]) =>
+                    `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg pc-soft text-xs font-semibold">${escapeHTML(pn)}<span class="px-1.5 rounded-md pc-btn text-[11px]">${n}</span></span>`).join('')
+                    || `<span class="text-xs text-slate-400">Nessun paziente</span>`;
+                body = `
+                    <div class="mt-3.5 flex items-center gap-2">
+                        <select id="private-patient-select" onchange="onPrivatePatientSelectChange(event)"
+                            class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 cursor-pointer">
+                            ${state.patients.map(p => `<option value="${escapeHTML(p)}" ${p === ap ? 'selected' : ''}>${escapeHTML(p)}</option>`).join('')}
+                        </select>
+                        <button type="button" onclick="openPatientsModal()" class="px-3 py-2 rounded-xl pc-soft text-xs font-bold cursor-pointer shrink-0">+ Nuovo / Gestisci</button>
+                    </div>
+                    <div class="flex items-center justify-between gap-3 my-4">
+                        <button type="button" onclick="updatePrivatePatientCount(-1)" aria-label="Riduci" class="w-11 h-11 ${BTN_MINUS}"><i data-lucide="minus" class="w-5 h-5"></i></button>
+                        <div class="text-center">
+                            <span class="text-2xl font-extrabold text-slate-900 tabular-nums block leading-none">${apCount}</span>
+                            <span class="text-[11px] font-medium text-slate-500 mt-1 block truncate max-w-[140px]">${escapeHTML(ap)}</span>
+                        </div>
+                        <button type="button" onclick="updatePrivatePatientCount(1)" aria-label="Aumenta" class="w-11 h-11 ${BTN_PLUS}"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100">
+                        <span class="text-[11px] font-semibold text-slate-500 block mb-1.5">Pazienti trattati oggi (${b.count})</span>
+                        <div class="flex flex-wrap gap-1.5">${chips}</div>
+                    </div>`;
+            } else if (subs.length) {
+                const rows = subs.map(s => ({ key: c.id + ':' + s.id, name: s.name }));
+                if ((Number(rec.counts[c.id]) || 0) > 0) rows.push({ key: c.id, name: 'Altro' });
+                body = `<div class="space-y-3 my-4">${rows.map(r => {
+                    const sv = b.subs[r.key] || { count: 0, euro: 0 };
+                    return `
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <span class="text-sm font-bold text-slate-900 block truncate">${escapeHTML(r.name)}</span>
+                            <span class="text-[11px] font-medium text-slate-500 tabular-nums">${fc(sv.euro)} · ${rateFor(r.key, state.selectedDate)} €</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="updateCount('${r.key}', -1)" aria-label="Riduci" class="w-10 h-10 ${BTN_MINUS}"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                            <span class="w-7 text-center text-lg font-extrabold text-slate-900 tabular-nums">${sv.count}</span>
+                            <button type="button" onclick="updateCount('${r.key}', 1)" aria-label="Aumenta" class="w-10 h-10 ${BTN_PLUS}"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>`;
+                }).join('')}</div>`;
+            } else {
+                body = `
+                    <div class="flex items-center justify-between gap-3 my-5">
+                        <button type="button" onclick="updateCount('${c.id}', -1)" aria-label="Riduci" class="w-12 h-12 ${BTN_MINUS}"><i data-lucide="minus" class="w-5 h-5"></i></button>
+                        <div class="text-center">
+                            <span class="text-4xl font-extrabold text-slate-900 tabular-nums block leading-none">${b.count}</span>
+                            <span class="text-sm font-medium text-slate-500 mt-1 block">${escapeHTML(plural(c.unit, b.count))}</span>
+                        </div>
+                        <button type="button" onclick="updateCount('${c.id}', 1)" aria-label="Aumenta" class="w-12 h-12 ${BTN_PLUS}"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                    </div>`;
+            }
+            return `<div class="pal-${c.color} bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between"><div>${head}${body}</div></div>`;
+        }
+
+        function renderWorkView() {
+            const dateInput = document.getElementById('work-date-input');
+            const dateLabel = document.getElementById('selected-date-label');
+            if (dateInput) dateInput.value = state.selectedDate;
+            if (dateLabel) dateLabel.textContent = formatDateExtendedIT(state.selectedDate);
+
+            const prefix = state.selectedDate.slice(0, 7);
+            const ms = getMonthStats(prefix);
+            const navBtn = 'w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0';
+
+            const rows = visibleCats(ms).map(c => {
+                const b = ms.byCat[c.id] || { count: 0, euro: 0, subs: {} };
+                let line = `${b.count} ${plural(c.unit, b.count)}`;
+                if (c.mode === 'patients') line += ` · ${Object.keys(ms.privateByPatient).length} pazienti`;
+                else {
+                    const subs = Object.entries(b.subs).filter(([k]) => k.includes(':')).map(([k, v]) => `${keyLabel(k)} ${v.count}`);
+                    if (subs.length) line += ` (${subs.join(' · ')})`;
+                }
+                return `
+                    <button type="button" onclick="openCategoryDetailModal('${c.id}')"
+                        class="pal-${c.color} pc-soft w-full flex items-center justify-between gap-2 p-2.5 rounded-xl transition-opacity hover:opacity-85 cursor-pointer text-left">
+                        <div class="min-w-0">
+                            <span class="font-bold block truncate">${escapeHTML(c.name)}</span>
+                            <span class="text-[11px] pc-mid tabular-nums">${escapeHTML(line)}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="font-extrabold text-sm tabular-nums">${fc(b.euro)}</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
+                        </div>
+                    </button>`;
+            }).join('');
+
+            const monthCard = document.getElementById('month-summary-card');
+            if (monthCard) {
+                monthCard.innerHTML = `
+                    <div class="flex items-center justify-center gap-3 pb-3.5 border-b border-slate-100">
+                        <button type="button" onclick="changeSelectedMonth(-1)" title="Mese precedente" class="${navBtn}"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <h2 class="text-base sm:text-lg font-extrabold text-slate-900 min-w-[150px] text-center tabular-nums">${escapeHTML(getMonthLabelIT(prefix))}</h2>
+                        <button type="button" onclick="changeSelectedMonth(1)" title="Mese successivo" class="${navBtn}"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+
+                    <div class="mt-3.5 grid grid-cols-2 gap-2.5">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                            <span class="text-[11px] font-medium text-slate-500 block leading-tight">Totale maturato nel mese</span>
+                            <div class="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums mt-1">${fc(ms.totalEuro)}</div>
+                        </div>
+                        <button type="button" onclick="openReceivedModal()"
+                            class="text-left p-3 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer">
+                            <span class="text-[11px] font-semibold text-emerald-800 block leading-tight">Totale incassato nel mese ›</span>
+                            <div class="text-xl sm:text-2xl font-extrabold text-emerald-950 tabular-nums mt-1">${fc(ms.receivedTotal)}</div>
+                        </button>
+                    </div>
+                    <div class="mt-2 flex justify-center">${renderCollectionBadge(ms.totalEuro, ms.collectedTotal)}</div>
+
+                    <div class="mt-3.5 space-y-2 text-xs">${rows}</div>
+
+                    <div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-slate-100">
+                        <button type="button" onclick="openMonthDetailModal()" class="py-2 px-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold leading-tight text-center transition-all cursor-pointer">
+                            Dettaglio<br><span class="font-semibold text-slate-600">Giorni</span></button>
+                        <button type="button" onclick="openMonthSummaryModal()" class="py-2 px-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold leading-tight text-center transition-all cursor-pointer">
+                            Dettaglio<br><span class="font-semibold text-slate-600">Mese</span></button>
+                        <button type="button" onclick="openQuickPaymentModal('month')" class="py-2 px-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold leading-tight text-center shadow-xs transition-all cursor-pointer">
+                            Incassa<br><span class="font-semibold text-teal-100">Mese</span></button>
+                    </div>`;
+            }
+
+            const ds = getDayStats(state.selectedDate);
+            const rec = getDayRecord(state.selectedDate);
+            const cont = document.getElementById('services-container');
+            if (cont) {
+                cont.innerHTML = state.categories.filter(c => !c.deleted).map(c => renderCategoryCard(c, ds, rec)).join('')
+                    || `<p class="col-span-full text-center text-sm text-slate-500 py-6">Nessuna categoria attiva: creane una dalle impostazioni.</p>`;
+            }
+            lucide.createIcons();
+        }
+
+        // ---- modali di dettaglio ----
+        function openInfoModal(title, subtitle, html) {
+            document.getElementById('info-title').textContent = title;
+            document.getElementById('info-subtitle').textContent = subtitle;
+            document.getElementById('info-content').innerHTML = html;
+            document.getElementById('info-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openReceivedModal() {
+            const prefix = state.selectedDate.slice(0, 7);
+            const ms = getMonthStats(prefix);
+            const list = ms.receivedInMonth.map(p => {
+                const c = catById(p.cat);
+                return `
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <span class="text-sm font-bold text-slate-900 tabular-nums block">${formatDateShortIT(p.date)}</span>
+                            <span class="text-xs text-slate-600 block truncate">${escapeHTML(p.note || (c ? c.name : p.category) || '—')}</span>
+                            <span class="text-[11px] text-slate-500 block">${escapeHTML(c ? c.name : (p.category || 'Altro'))}</span>
+                        </div>
+                        <span class="text-base font-extrabold text-emerald-700 tabular-nums shrink-0">${fc(p.amount)}</span>
+                    </div>`;
+            }).join('') || `<p class="text-center py-8 text-slate-500 text-sm">Nessun incasso registrato in questo mese.</p>`;
+            openInfoModal('Incassato nel mese', `${getMonthLabelIT(prefix)} · Totale ${fc(ms.receivedTotal)}`, list);
+        }
+
+        function openMonthDetailModal() {
+            const prefix = state.selectedDate.slice(0, 7);
+            const ms = getMonthStats(prefix);
+            document.getElementById('month-detail-subtitle').textContent =
+                `${getMonthLabelIT(prefix)} · ${ms.daysBreakdown.length} giorni lavorati · ${fc(ms.totalEuro)}`;
+            const container = document.getElementById('month-detail-content');
+            container.innerHTML = ms.daysBreakdown.length === 0
+                ? `<div class="text-center py-8 text-slate-500 text-sm">Nessuna prestazione registrata in questo mese.</div>`
+                : ms.daysBreakdown.map(d => {
+                    const parts = Object.values(d.byCat).flatMap(b => Object.entries(b.subs).map(([k, v]) => `${keyLabel(k)} ${v.count}`));
+                    return `
+                        <button type="button" onclick="selectDateFromModal('${d.date}')"
+                            class="w-full p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 text-left cursor-pointer">
+                            <div class="min-w-0">
+                                <span class="text-sm font-bold text-slate-900 block">${formatDateExtendedIT(d.date)}</span>
+                                <span class="text-xs text-slate-500 tabular-nums">${escapeHTML(parts.join(' · '))}</span>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="text-sm font-extrabold text-slate-900 tabular-nums block">${fc(d.totalEuro)}</span>
+                                <span class="text-[11px] font-semibold text-teal-700">Apri giorno →</span>
+                            </div>
+                        </button>`;
+                }).join('');
+            document.getElementById('month-detail-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function patientRowsHTML(ms, closeFirst) {
+            const entries = Object.entries(ms.privateByPatient).sort((a, b) => a[0].localeCompare(b[0], 'it'));
+            const pc = (catById('privati') || {}).color || 'brown';
+            if (!entries.length) return `<p class="text-xs text-slate-500">Nessun paziente privato registrato nel mese.</p>`;
+            return entries.map(([pn, n]) => {
+                const euro = ms.privateEuroByPatient[pn] || 0;
+                return `
+                    <button type="button" onclick="${closeFirst ? "closeModal('category-detail-modal'); " : ''}openPatientDetailModal('${escapeAttr(pn)}')"
+                        class="pal-${pc} pc-soft w-full p-3 rounded-xl flex items-center justify-between gap-2 text-left cursor-pointer">
+                        <div class="min-w-0">
+                            <span class="text-sm font-bold block truncate">${escapeHTML(pn)}</span>
+                            <span class="text-xs pc-mid tabular-nums">${n} ${n === 1 ? 'seduta' : 'sedute'} · ${renderCollectionBadge(euro, ms.collectedByPatient[pn] || 0)}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="text-sm font-extrabold tabular-nums">${fc(euro)}</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
+                        </div>
+                    </button>`;
+            }).join('');
+        }
+
+        function openMonthSummaryModal() {
+            const prefix = state.selectedDate.slice(0, 7);
+            const ms = getMonthStats(prefix);
+            const avg = ms.daysBreakdown.length ? ms.totalEuro / ms.daysBreakdown.length : 0;
+            document.getElementById('month-summary-subtitle').textContent = `${getMonthLabelIT(prefix)} · Riepilogo maturato`;
+            const box = (l, v) => `<div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80"><span class="text-[11px] font-medium text-slate-500 block">${l}</span><span class="text-base font-extrabold text-slate-900 tabular-nums mt-0.5 block">${v}</span></div>`;
+            const catRows = visibleCats(ms).map(c => {
+                const b = ms.byCat[c.id] || { count: 0, euro: 0 };
+                return `<div class="flex items-center justify-between gap-2"><span class="font-semibold text-slate-700">${escapeHTML(c.name)} (${b.count} ${plural(c.unit, b.count)})</span><span class="font-bold text-slate-900 tabular-nums">${fc(b.euro)}</span></div>`;
+            }).join('');
+            const showPatients = Object.keys(ms.privateByPatient).length > 0;
+            document.getElementById('month-summary-content').innerHTML = `
+                <div class="grid grid-cols-3 gap-2.5">${box('Maturato Mese', fc(ms.totalEuro))}${box('Giorni Lavorati', ms.daysBreakdown.length)}${box('Media / Giorno', fc(avg))}</div>
+                <div class="p-3.5 rounded-xl border border-slate-200/80 space-y-2 text-xs">${catRows}</div>
+                ${showPatients ? `<div><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pazienti Privati del Mese (clicca per date e incasso)</h4><div class="space-y-2">${patientRowsHTML(ms, false)}</div></div>` : ''}`;
+            document.getElementById('month-summary-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openCategoryDetailModal(id) {
+            const c = catById(id);
+            if (!c) return;
+            const prefix = state.selectedDate.slice(0, 7);
+            const ms = getMonthStats(prefix);
+            const b = ms.byCat[id] || { count: 0, euro: 0, subs: {} };
+            document.getElementById('category-detail-title').textContent = c.name;
+            document.getElementById('category-detail-subtitle').textContent = getMonthLabelIT(prefix);
+
+            const subTxt = Object.entries(b.subs).filter(([k]) => k.includes(':')).map(([k, v]) => `${keyLabel(k)}: ${v.count}`).join(' · ');
+            const top = `
+                <div class="pal-${c.color} pc-soft p-4 rounded-xl flex items-center justify-between gap-2">
+                    <div>
+                        <span class="text-xs font-semibold pc-mid block">Totale maturato mese</span>
+                        <span class="text-2xl font-extrabold tabular-nums">${fc(b.euro)}</span>
+                        <span class="text-xs pc-mid block mt-0.5 tabular-nums">${b.count} ${plural(c.unit, b.count)}${subTxt ? ' (' + escapeHTML(subTxt) + ')' : ''}</span>
+                    </div>
+                    ${renderCollectionBadge(b.euro, ms.collectedByCat[id] || 0)}
+                </div>`;
+            let list;
+            if (c.mode === 'patients') {
+                list = `<h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Riepilogo pazienti del mese</h4><div class="space-y-2">${patientRowsHTML(ms, true)}</div>`;
+            } else {
+                const days = ms.daysBreakdown.filter(d => d.byCat[id]);
+                list = `<h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Dettaglio giornate del mese</h4><div class="space-y-1.5">${days.length ? days.map(d => {
+                    const bb = d.byCat[id];
+                    const parts = Object.entries(bb.subs).filter(([k]) => k.includes(':')).map(([k, v]) => `${keyLabel(k)}: ${v.count}`).join(' · ');
+                    return `
+                        <button type="button" onclick="selectDateFromModal('${d.date}')" class="w-full p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-between gap-2 text-left text-xs cursor-pointer">
+                            <div class="min-w-0"><span class="font-semibold text-slate-800 block">${formatDateExtendedIT(d.date)}</span>${parts ? `<span class="text-[11px] text-slate-500">${escapeHTML(parts)}</span>` : ''}</div>
+                            <span class="font-bold text-slate-900 tabular-nums shrink-0">${bb.count} ${plural(c.unit, bb.count)} · ${fc(bb.euro)}</span>
+                        </button>`;
+                }).join('') : `<p class="text-xs text-slate-500">Nessuna prestazione questo mese.</p>`}</div>`;
+            }
+            document.getElementById('category-detail-content').innerHTML = `${top}<div>${list}</div>`;
+            document.getElementById('category-detail-pay-btn').onclick = () => { closeModal('category-detail-modal'); openQuickPaymentModal(id); };
+            document.getElementById('category-detail-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openPatientDetailModal(name) {
+            const prefix = state.selectedDate.slice(0, 7);
+            const sessions = getPatientTreatmentDates(prefix, name);
+            const totalCount = sessions.reduce((a, s) => a + s.count, 0);
+            const totalEuro = sessions.reduce((a, s) => a + s.amount, 0);
+            const pc = (catById('privati') || {}).color || 'brown';
+            document.getElementById('patient-detail-title').textContent = name;
+            document.getElementById('patient-detail-subtitle').textContent = `${getMonthLabelIT(prefix)} · Trattamenti`;
+            const dates = sessions.length ? sessions.map(s => `
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+                    <span class="font-semibold text-slate-800">${formatDateExtendedIT(s.date)}</span>
+                    <span class="font-bold text-slate-900 tabular-nums">${s.count} ${s.count === 1 ? 'seduta' : 'sedute'} · ${fc(s.amount)}</span>
+                </div>`).join('') : `<p class="text-xs text-slate-500">Nessuna seduta in questo mese.</p>`;
+            document.getElementById('patient-detail-content').innerHTML = `
+                <div class="pal-${pc} pc-soft p-4 rounded-xl">
+                    <span class="text-xs font-semibold pc-mid block">Totale maturato del paziente</span>
+                    <span class="text-2xl font-extrabold tabular-nums mt-0.5 block">${fc(totalEuro)}</span>
+                    <span class="text-xs pc-mid tabular-nums">${totalCount} ${totalCount === 1 ? 'seduta effettuata' : 'sedute effettuate'}</span>
+                </div>
+                <div><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Date trattamenti effettuati</h4><div class="space-y-1.5">${dates}</div></div>`;
+            document.getElementById('patient-detail-pay-btn').onclick = () => { closeModal('patient-detail-modal'); openQuickPaymentModal('patient:' + name); };
+            document.getElementById('patient-detail-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // ---- incassi ----
+        let payMonthPrefix = null;
+        const activeCatOptions = (selected, includeId) => state.categories
+            .filter(c => !c.deleted || c.id === includeId)
+            .map(c => `<option value="${c.id}" ${c.id === selected ? 'selected' : ''}>${escapeHTML(c.name)}</option>`).join('');
+
+        function openQuickPaymentModal(presetKey) {
+            const prefix = state.selectedDate.slice(0, 7);
+            payMonthPrefix = prefix;
+            const ms = getMonthStats(prefix);
+            let opts = `<option value="month">Totale mese (${fc(ms.totalEuro)})</option>` +
+                state.categories.filter(c => !c.deleted).map(c => `<option value="cat:${c.id}">${escapeHTML(c.name)} mese (${fc((ms.byCat[c.id] || {}).euro || 0)})</option>`).join('');
+            const pats = Object.keys(ms.privateByPatient);
+            if (pats.length) {
+                opts += `<optgroup label="Paziente Privato del Mese">` + pats.map(pn =>
+                    `<option value="patient:${escapeHTML(pn)}">${escapeHTML(pn)} — ${fc(ms.privateEuroByPatient[pn] || 0)} (${ms.privateByPatient[pn]} sed.)</option>`).join('') + `</optgroup>`;
+            }
+            const src = document.getElementById('quick-pay-source');
+            src.innerHTML = opts;
+            src.value = !presetKey || presetKey === 'month' ? 'month' : (presetKey.startsWith('patient:') ? presetKey : 'cat:' + presetKey);
+            document.getElementById('quick-pay-category').innerHTML = activeCatOptions(null, null);
+            document.getElementById('quick-pay-date').value = getTodayISO();
+            document.getElementById('quick-pay-note').value = '';
+            onQuickPaySourceChange();
+            document.getElementById('quick-payment-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function onQuickPaySourceChange() {
+            const v = document.getElementById('quick-pay-source').value;
+            const prefix = payMonthPrefix || state.selectedDate.slice(0, 7);
+            const ms = getMonthStats(prefix);
+            const cat = document.getElementById('quick-pay-category');
+            const amt = document.getElementById('quick-pay-amount');
+            const note = document.getElementById('quick-pay-note');
+            const label = getMonthLabelIT(prefix);
+            const setAmt = x => { amt.value = x > 0 ? x.toFixed(2) : ''; };
+            if (v.startsWith('cat:')) {
+                const c = catById(v.slice(4));
+                if (c) { cat.value = c.id; setAmt((ms.byCat[c.id] || {}).euro || 0); note.value = `${c.name} ${label}`; }
+            } else if (v.startsWith('patient:')) {
+                const pn = v.slice(8);
+                if (catById('privati') && !catById('privati').deleted) cat.value = 'privati';
+                setAmt(ms.privateEuroByPatient[pn] || 0);
+                note.value = `${pn} (${label})`;
+            } else {
+                setAmt(ms.totalEuro);
+                note.value = `Maturato ${label}`;
+            }
+        }
+
+        function handleQuickPaymentSubmit(e) {
+            e.preventDefault();
+            const catId = document.getElementById('quick-pay-category').value;
+            const amount = parseFloat(document.getElementById('quick-pay-amount').value);
+            const date = document.getElementById('quick-pay-date').value;
+            const note = document.getElementById('quick-pay-note').value.trim();
+            if (!date || Number.isNaN(amount) || amount <= 0) return;
+            const c = catById(catId);
+            state.payments.push({
+                id: 'pay_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                cat: catId, category: c ? c.name : '', amount, date, note,
+                forMonth: payMonthPrefix || state.selectedDate.slice(0, 7)
+            });
+            persistChanges();
+            closeModal('quick-payment-modal');
+            if (!document.getElementById('view-payments').classList.contains('hidden')) { populateYearFilter(); renderPayments(); }
+            else renderWorkView();
+            showToast('Incasso registrato');
+        }
+
+        function openEditPaymentModal(paymentId) {
+            const p = state.payments.find(item => item.id === paymentId);
+            if (!p) return;
+            document.getElementById('edit-pay-id').value = p.id;
+            document.getElementById('edit-pay-category').innerHTML = activeCatOptions(p.cat, p.cat);
+            document.getElementById('edit-pay-amount').value = Number(p.amount || 0).toFixed(2);
+            document.getElementById('edit-pay-date').value = p.date || getTodayISO();
+            document.getElementById('edit-pay-note').value = p.note || '';
+            document.getElementById('edit-payment-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function handleEditPaymentSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-pay-id').value;
+            const catId = document.getElementById('edit-pay-category').value;
+            const amount = parseFloat(document.getElementById('edit-pay-amount').value);
+            const date = document.getElementById('edit-pay-date').value;
+            const note = document.getElementById('edit-pay-note').value.trim();
+            if (!id || !date || Number.isNaN(amount) || amount <= 0) return;
+            const idx = state.payments.findIndex(item => item.id === id);
+            if (idx === -1) return;
+            const c = catById(catId);
+            state.payments[idx] = { ...state.payments[idx], cat: catId, category: c ? c.name : state.payments[idx].category, amount, date, note };
+            persistChanges();
+            closeModal('edit-payment-modal');
+            populateYearFilter();
+            renderPayments();
+            showToast('Incasso aggiornato');
+        }
+
+        const payCatName = p => { const c = catById(p.cat); return c ? c.name : (p.category || 'Altro'); };
+
+        function setCategoryFilter(id) { state.categoryFilter = id; renderPayments(); }
+
+        function getFilteredPayments() {
+            const year = document.getElementById('filter-year').value;
+            const month = document.getElementById('filter-month').value;
+            const cat = state.categoryFilter;
+            return state.payments.filter(p => {
+                if (!p || !p.date) return false;
+                if (year && !p.date.startsWith(year + '-')) return false;
+                if (month && month !== 'all' && p.date.slice(5, 7) !== month) return false;
+                if (cat && cat !== 'Tutti' && p.cat !== cat) return false;
+                return true;
+            }).sort((a, b) => b.date.localeCompare(a.date));
+        }
+
+        function renderPayments() {
+            const year = document.getElementById('filter-year').value || state.selectedDate.slice(0, 4);
+            const month = document.getElementById('filter-month').value || 'all';
+            const period = state.payments.filter(p => p && p.date && p.date.startsWith(year + '-') && (month === 'all' || p.date.slice(5, 7) === month));
+            const sums = {};
+            period.forEach(p => { const k = p.cat || '?'; sums[k] = (sums[k] || 0) + (Number(p.amount) || 0); });
+            const shown = state.categories.filter(c => !c.deleted || sums[c.id]);
+            if (state.categoryFilter !== 'Tutti' && !shown.some(c => c.id === state.categoryFilter)) state.categoryFilter = 'Tutti';
+            const cat = state.categoryFilter;
+
             const filtered = getFilteredPayments();
-            const headers = ['Data', 'Categoria', 'Importo EUR', 'Descrizione'];
-            const rows = filtered.map(p => [
-                p.date || '',
-                p.category || '',
-                Number(p.amount || 0).toFixed(2).replace('.', ','),
+            document.getElementById('kpi-total-collected').textContent = fc(filtered.reduce((a, p) => a + (Number(p.amount) || 0), 0));
+            document.getElementById('kpi-total-count').textContent = `${filtered.length} ${filtered.length === 1 ? 'incasso registrato' : 'incassi registrati'}`;
+
+            let kpi = shown.map(c => `<div class="pal-${c.color} pc-soft flex items-center justify-between gap-2 p-2.5 rounded-xl"><span class="font-bold">${escapeHTML(c.name)}</span><span class="font-extrabold text-sm tabular-nums">${fc(sums[c.id] || 0)}</span></div>`).join('');
+            if (sums['?']) kpi += `<div class="pal-gray pc-soft flex items-center justify-between gap-2 p-2.5 rounded-xl"><span class="font-bold">Altro</span><span class="font-extrabold text-sm tabular-nums">${fc(sums['?'])}</span></div>`;
+            document.getElementById('kpi-cats').innerHTML = kpi;
+
+            document.getElementById('cat-filters').innerHTML = [['Tutti', 'Tutti']].concat(shown.map(c => [c.id, c.name])).map(([id, name]) =>
+                `<button type="button" onclick="setCategoryFilter('${id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${cat === id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">${escapeHTML(name)}</button>`).join('');
+
+            const annualBox = document.getElementById('annual-months-breakdown');
+            if (month === 'all') {
+                annualBox.classList.remove('hidden');
+                const catName = cat !== 'Tutti' ? ` (${escapeHTML((catById(cat) || {}).name || '')})` : '';
+                annualBox.innerHTML = `
+                    <div class="flex items-center justify-between mb-2.5">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600">Riepilogo 12 Mesi — ${escapeHTML(year)}${catName}</h3>
+                        <span class="text-[11px] text-slate-500">Clicca un mese per filtrarlo</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                        ${['01','02','03','04','05','06','07','08','09','10','11','12'].map(m => {
+                            const sum = state.payments.filter(p => p.date && p.date.startsWith(`${year}-${m}-`) && (cat === 'Tutti' || p.cat === cat)).reduce((a, p) => a + (Number(p.amount) || 0), 0);
+                            return `<button type="button" onclick="selectMonthFromAnnual('${m}')" class="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-teal-400 transition-colors text-left cursor-pointer">
+                                <span class="text-[11px] font-semibold text-slate-500 block">${getMonthNameIT(m).slice(0, 3)}</span>
+                                <span class="text-xs sm:text-sm font-extrabold text-slate-900 tabular-nums mt-0.5 block">${fc(sum)}</span></button>`;
+                        }).join('')}
+                    </div>`;
+            } else {
+                annualBox.classList.add('hidden');
+                annualBox.innerHTML = '';
+            }
+
+            const listEl = document.getElementById('payments-list-container');
+            listEl.innerHTML = filtered.length === 0
+                ? `<div class="p-10 text-center text-slate-500 text-sm">Nessun incasso trovato per i filtri selezionati.</div>`
+                : filtered.map(p => {
+                    const c = catById(p.cat);
+                    return `
+                    <div class="p-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors">
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-sm font-bold text-slate-900 tabular-nums">${formatDateShortIT(p.date)}</span>
+                                <span class="pal-${c ? c.color : 'gray'} pc-soft text-[11px] font-bold px-2.5 py-0.5 rounded-full">${escapeHTML(payCatName(p))}</span>
+                            </div>
+                            ${p.note ? `<p class="text-xs text-slate-600">${escapeHTML(p.note)}</p>` : ''}
+                        </div>
+                        <div class="flex items-center justify-between sm:justify-end gap-3">
+                            <span class="text-base font-extrabold text-emerald-700 tabular-nums">${fc(p.amount)}</span>
+                            <div class="flex items-center gap-1">
+                                <button type="button" onclick="openEditPaymentModal('${escapeAttr(p.id)}')" title="Modifica incasso" class="p-2 rounded-lg text-slate-500 hover:text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                <button type="button" onclick="deletePayment('${escapeAttr(p.id)}')" title="Elimina incasso" class="p-2 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            lucide.createIcons();
+        }
+
+        function exportPaymentsCSV() {
+            const rows = getFilteredPayments().map(p => [
+                p.date || '', payCatName(p), Number(p.amount || 0).toFixed(2).replace('.', ','),
                 `"${String(p.note || '').replace(/"/g, '""')}"`
             ]);
-
-            const csvContent = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
+            const csv = [['Data', 'Categoria', 'Importo EUR', 'Descrizione'].join(';'), ...rows.map(r => r.join(';'))].join('\n');
+            const url = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
             const a = document.createElement('a');
-            const year = document.getElementById('filter-year').value || 'tutti';
-            const month = document.getElementById('filter-month').value || 'all';
             a.href = url;
-            a.download = `incassi_${year}_${month}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            a.download = `incassi_${document.getElementById('filter-year').value || 'tutti'}_${document.getElementById('filter-month').value || 'all'}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
             showToast('Esportazione CSV completata');
+        }
+
+        // ---- impostazioni ----
+        function openSettingsModal() {
+            renderSettings();
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function setFont(f) {
+            state.font = FONTS[f] ? f : 'classico';
+            applyTheme();
+            persistChanges({ syncCloud: false });
+            renderSettings();
+        }
+
+        const IC_BTN = 'p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer';
+
+        function renderSettings() {
+            const on = 'border-teal-500 bg-teal-50 text-teal-800';
+            const off = 'border-slate-200 bg-white text-slate-600';
+            document.getElementById('settings-theme').innerHTML = [['light', 'Chiaro', 'sun'], ['dark', 'Scuro', 'moon']].map(([k, l, i]) => `
+                <button type="button" onclick="setTheme('${k}')" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-bold cursor-pointer transition-colors ${state.theme === k ? on : off}">
+                    <i data-lucide="${i}" class="w-4 h-4"></i><span>${l}</span></button>`).join('');
+            document.getElementById('settings-fonts').innerHTML = Object.entries(FONTS).map(([k, [l, fam]]) => `
+                <button type="button" onclick="setFont('${k}')" style="font-family:${fam}" class="px-3 py-2.5 rounded-xl border-2 text-sm font-bold cursor-pointer transition-colors ${state.font === k ? on : off}">${l}</button>`).join('');
+
+            const subRow = (c, s) => `
+                <div class="flex items-center justify-between gap-2 pl-5 text-xs">
+                    <span class="font-semibold text-slate-700 truncate">${escapeHTML(s.name)}</span>
+                    <span class="flex shrink-0">
+                        <button type="button" onclick="openCatForm('sub','${s.id}','${c.id}')" class="${IC_BTN}" title="Modifica"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                        <button type="button" onclick="deleteSub('${c.id}','${s.id}')" class="${IC_BTN}" title="Elimina"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </span>
+                </div>`;
+            let html = state.categories.filter(c => !c.deleted).map(c => `
+                <div class="pal-${c.color} p-3 rounded-xl border border-slate-200 bg-slate-50/70">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0"><span class="w-3 h-3 rounded-full pc-dot shrink-0"></span><span class="text-sm font-bold text-slate-900 truncate">${escapeHTML(c.name)}</span></div>
+                        <span class="flex shrink-0">
+                            <button type="button" onclick="openCatForm('cat','${c.id}')" class="${IC_BTN}" title="Modifica"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button type="button" onclick="deleteCat('${c.id}')" class="${IC_BTN}" title="Elimina"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </span>
+                    </div>
+                    ${c.mode === 'patients' ? '' : `<div class="mt-1.5 space-y-0.5">${activeSubs(c).map(s => subRow(c, s)).join('')}
+                        <button type="button" onclick="openCatForm('sub',null,'${c.id}')" class="ml-5 mt-1 text-[11px] font-bold pc-mid cursor-pointer">+ Sottocategoria</button></div>`}
+                </div>`).join('');
+            html += `<button type="button" onclick="openCatForm('cat',null)" class="w-full px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-bold cursor-pointer">+ Nuova categoria</button>`;
+
+            const gone = [];
+            state.categories.forEach(c => {
+                if (c.deleted) gone.push(`<div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500 truncate">${escapeHTML(c.name)}</span><button type="button" onclick="restoreCat('${c.id}')" class="text-[11px] font-bold text-teal-700 cursor-pointer shrink-0">Ripristina</button></div>`);
+                (c.subs || []).forEach(s => { if (s.deleted && !c.deleted) gone.push(`<div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500 truncate">${escapeHTML(c.name)} › ${escapeHTML(s.name)}</span><button type="button" onclick="restoreSub('${c.id}','${s.id}')" class="text-[11px] font-bold text-teal-700 cursor-pointer shrink-0">Ripristina</button></div>`); });
+            });
+            if (gone.length) html += `<div class="p-3 rounded-xl border border-slate-200 space-y-1.5"><span class="text-[11px] font-bold text-slate-500 uppercase">Eliminate (i dati restano)</span>${gone.join('')}</div>`;
+            document.getElementById('settings-cats').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function afterCatChange() {
+            persistChanges();
+            renderSettings();
+            if (!document.getElementById('rates-modal').classList.contains('hidden')) renderRates();
+            renderWorkView();
+            renderPayments();
+        }
+
+        function deleteCat(id) {
+            const c = catById(id);
+            if (!c || !confirm(`Eliminare la categoria "${c.name}"?\n\nI dati già registrati restano nei riepiloghi e negli incassi; non potrai più aggiungere nuove prestazioni. Potrai ripristinarla dalle impostazioni.`)) return;
+            c.deleted = true;
+            afterCatChange();
+            showToast('Categoria eliminata');
+        }
+        function deleteSub(cid, sid) {
+            const c = catById(cid), s = c && c.subs.find(x => x.id === sid);
+            if (!s || !confirm(`Eliminare la sottocategoria "${s.name}"?\n\nI dati già registrati restano; non potrai più aggiungere nuove prestazioni. Potrai ripristinarla dalle impostazioni.`)) return;
+            s.deleted = true;
+            afterCatChange();
+            showToast('Sottocategoria eliminata');
+        }
+        function restoreCat(id) { const c = catById(id); if (c) { c.deleted = false; afterCatChange(); } }
+        function restoreSub(cid, sid) { const c = catById(cid), s = c && c.subs.find(x => x.id === sid); if (s) { s.deleted = false; afterCatChange(); } }
+
+        let catForm = null;
+        function openCatForm(kind, id, parentId) {
+            catForm = { kind, id, parentId };
+            const parent = parentId ? catById(parentId) : null;
+            const item = kind === 'cat' ? (id ? catById(id) : null) : (id ? parent.subs.find(s => s.id === id) : null);
+            const title = (id ? 'Modifica ' : 'Nuova ') + (kind === 'cat' ? 'categoria' : 'sottocategoria');
+            const inp = 'w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-teal-500';
+            const cur = item && kind === 'cat' ? item.color : 'blue';
+            const colors = kind !== 'cat' ? '' : `
+                <div><span class="block text-xs font-semibold text-slate-600 mb-1.5">Colore</span>
+                <div class="flex flex-wrap gap-2">${Object.keys(PALETTES).map(n => `
+                    <label class="cursor-pointer" title="${PALETTE_NAMES[n]}"><input type="radio" name="cf-color" value="${n}" class="peer sr-only" ${n === cur ? 'checked' : ''}>
+                    <span class="block w-8 h-8 rounded-full border-2 border-white ring-1 ring-slate-300 peer-checked:ring-4 peer-checked:ring-slate-800" style="background:${PALETTES[n][3]}"></span></label>`).join('')}</div></div>`;
+            const rate = id ? '' : `
+                <div><label class="block text-xs font-semibold text-slate-600 mb-1" for="cf-rate">Tariffa (€ a prestazione)</label>
+                <input id="cf-rate" type="number" step="0.01" min="0" inputmode="decimal" value="${kind === 'sub' ? curRate(parentId) : ''}" placeholder="0" class="${inp}"></div>`;
+            document.getElementById('cat-form-title').textContent = title;
+            document.getElementById('cat-form-body').innerHTML = `
+                <div><label class="block text-xs font-semibold text-slate-600 mb-1" for="cf-name">Nome</label>
+                <input id="cf-name" type="text" maxlength="40" required value="${item ? escapeHTML(item.name) : ''}" class="${inp}"></div>${colors}${rate}`;
+            document.getElementById('cat-form-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function saveCatForm(e) {
+            e.preventDefault();
+            const f = catForm;
+            const name = document.getElementById('cf-name').value.trim();
+            if (!name) return;
+            const rateEl = document.getElementById('cf-rate');
+            const rate = rateEl ? (parseFloat(String(rateEl.value).replace(',', '.')) || 0) : 0;
+            if (f.kind === 'cat') {
+                const color = (document.querySelector('input[name="cf-color"]:checked') || {}).value || 'gray';
+                if (f.id) { const c = catById(f.id); c.name = name; c.color = color; }
+                else {
+                    const id = 'c' + Date.now().toString(36);
+                    state.categories.push({ id, name, color, mode: 'count', unit: 'prestazione', deleted: false, subs: [] });
+                    state.rateHistory[id] = [{ from: '0000-01-01', rate }];
+                }
+            } else {
+                const c = catById(f.parentId);
+                if (f.id) c.subs.find(s => s.id === f.id).name = name;
+                else {
+                    const sid = 's' + Date.now().toString(36);
+                    c.subs.push({ id: sid, name, deleted: false });
+                    state.rateHistory[c.id + ':' + sid] = [{ from: '0000-01-01', rate }];
+                }
+            }
+            closeModal('cat-form-modal');
+            afterCatChange();
+            showToast('Salvato');
+        }
+
+        // ---- tariffe ----
+        function openRatesModal() {
+            renderRates();
+            document.getElementById('rates-modal').classList.remove('hidden');
+        }
+
+        function renderRates() {
+            const inp = 'bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-2 focus:ring-teal-500 tabular-nums';
+            const editor = (key, label) => `
+                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-sm font-bold text-slate-900 truncate">${escapeHTML(label)}</span>
+                        <span class="text-xs text-slate-500 tabular-nums shrink-0">oggi ${fc(curRate(key))}</span>
+                    </div>
+                    <div class="flex flex-wrap items-end gap-2 mt-2">
+                        <div><label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Nuova tariffa (€)</label>
+                            <input id="rate-val-${key}" type="number" step="0.01" min="0" inputmode="decimal" value="${curRate(key)}" class="w-24 ${inp}"></div>
+                        <div><label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Valida dal</label>
+                            <input id="rate-from-${key}" type="date" value="${getTodayISO()}" class="${inp}"></div>
+                        <button type="button" onclick="saveRate('${key}')" class="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer">Salva</button>
+                    </div>
+                    <ul class="mt-2 text-[11px] text-slate-500 space-y-0.5">${(state.rateHistory[key] || []).map(e => `<li>${e.from === '0000-01-01' ? 'Iniziale' : 'dal ' + formatDateShortIT(e.from)}: <b>${fc(e.rate)}</b></li>`).join('')}</ul>
+                </div>`;
+            document.getElementById('rates-body').innerHTML = state.categories.filter(c => !c.deleted).map(c => {
+                const subs = c.mode === 'patients' ? [] : activeSubs(c);
+                return `<div class="pal-${c.color} space-y-2">
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full pc-dot"></span><h4 class="text-xs font-bold uppercase tracking-wide text-slate-600">${escapeHTML(c.name)}</h4></div>
+                    ${subs.length ? subs.map(s => editor(c.id + ':' + s.id, s.name)).join('') : editor(c.id, c.name)}
+                </div>`;
+            }).join('');
+        }
+
+        function saveRate(key) {
+            const val = parseFloat(String(document.getElementById('rate-val-' + key).value).replace(',', '.'));
+            const from = document.getElementById('rate-from-' + key).value || getTodayISO();
+            if (!Number.isFinite(val) || val < 0) { showToast('Tariffa non valida'); return; }
+            const hist = (state.rateHistory[key] || []).filter(e => e.from !== from);
+            hist.push({ from, rate: Math.round(val * 100) / 100 });
+            hist.sort((a, b) => (a.from < b.from ? -1 : 1));
+            hist[0].from = '0000-01-01';
+            state.rateHistory[key] = hist;
+            persistChanges();
+            renderRates();
+            renderWorkView();
+            renderPayments();
+            showToast('Tariffa salvata');
         }
 
         // ==========================================
