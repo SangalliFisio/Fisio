@@ -159,6 +159,13 @@
                     <span>Azzera giornata</span>
                 </button>
             </div>
+            <div class="flex justify-center pb-6">
+                <button type="button" onclick="shareBackup()" title="Salva un backup (Drive)" id="backup-pill"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer shrink-0 border-slate-200 bg-slate-100 text-slate-600">
+                    <span id="backup-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                    <span id="backup-text">Backup</span>
+                </button>
+            </div>
 
         </section>
 
@@ -216,11 +223,7 @@
                 </button>
                 <div>
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dati</h4>
-                    <div id="backup-pill" class="mb-2.5 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold border-slate-200 bg-slate-100 text-slate-600">
-                        <span id="backup-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-                        <span id="backup-text">Backup</span>
-                    </div>
-                    <div class="flex gap-2">
+                                        <div class="flex gap-2">
                         <button type="button" onclick="shareBackup()" class="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold whitespace-nowrap cursor-pointer"><i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i><span>Backup</span></button>
                         <label class="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold whitespace-nowrap cursor-pointer"><i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-amber-600"></i><span>Ripristina</span><input type="file" id="import-json-input" onchange="importBackupJSON(event)" class="hidden"></label>
                         <button type="button" onclick="exportPaymentsCSV()" class="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold whitespace-nowrap cursor-pointer"><i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i><span>Esporta CSV</span></button>
@@ -2619,8 +2622,7 @@
             const legend = cats.map(c => `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 whitespace-nowrap"><span class="w-2 h-2 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span>${escapeHTML(c.name)}</span>`).join('');
             const sel = chartSel !== null ? slots[chartSel] : null;
             const detail = sel
-                ? `<span class="block font-bold text-slate-900">${escapeHTML(sel.full)}</span>` +
-                  `<span class="block mt-0.5 text-slate-500">Totale periodo <b class="text-slate-900 tabular-nums">${fc(sel.total)}</b></span>` +
+                ? `<span class="block font-bold text-slate-900">${escapeHTML(sel.full)} · <span class="font-medium text-slate-500 tabular-nums">${fc(sel.total)}</span></span>` +
                   cats.filter(c => (sel.byCat[c.id] || {}).euro > 0).map(c => `<span class="flex items-center justify-center gap-1.5 mt-1"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span><span class="font-semibold text-slate-900">${escapeHTML(c.name)}</span><span class="font-bold text-slate-900 tabular-nums">${fc(sel.byCat[c.id].euro)}</span></span>`).join('')
                 : 'Tocca una colonna per vedere il dettaglio';
             const tog = (m, label) => `<button type="button" onclick="setChartMode('${m}')" class="px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${chartMode === m ? 'bg-white text-teal-700 shadow-xs' : 'text-slate-600'}">${label}</button>`;
