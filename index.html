@@ -203,26 +203,8 @@
                 </div>
 
                 <div id="kpi-cats" class="mt-3.5 space-y-2 text-xs"></div>
-
-                <button type="button" onclick="openQuickPaymentModal('month')"
-                    class="mt-3.5 w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                    <span>Registra Incasso da Maturato</span>
-                </button>
             </div>
 
-            <!-- Elenco Incassi + Filtri Categoria -->
-            <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-                <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div id="cat-filters" class="flex flex-wrap items-center gap-1.5"></div>
-                </div>
-
-                <!-- Riepilogo 12 Mesi (visibile quando Mese = Tutti i mesi) -->
-                <div id="annual-months-breakdown" class="hidden p-4 sm:p-5 bg-slate-50/70 border-b border-slate-200"></div>
-
-                <!-- Lista Incassi -->
-                <div id="payments-list-container" class="divide-y divide-slate-100"></div>
-            </div>
         </section>
 
     </main>
@@ -1462,6 +1444,7 @@
             persistChanges();
             renderPayments();
             showToast('Incasso eliminato');
+            if (reportCat !== null) openPaymentReport(reportCat);
         }
 
         // ==========================================
@@ -1963,16 +1946,9 @@
                         <button type="button" onclick="changeSelectedMonth(1)" title="Mese successivo" class="${navBtn}"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                     </div>
 
-                    <div class="mt-3.5 grid grid-cols-2 gap-2.5">
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                            <span class="text-[11px] font-medium text-slate-500 block leading-tight">Totale maturato nel mese</span>
-                            <div class="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums mt-1">${fc(ms.totalEuro)}</div>
-                        </div>
-                        <button type="button" onclick="openReceivedModal()"
-                            class="text-left p-3 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer">
-                            <span class="text-[11px] font-semibold text-emerald-800 block leading-tight">Totale incassato nel mese ›</span>
-                            <div class="text-xl sm:text-2xl font-extrabold text-emerald-950 tabular-nums mt-1">${fc(ms.receivedTotal)}</div>
-                        </button>
+                    <div class="mt-3.5 flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                        <span class="text-xs font-medium text-slate-500">Totale maturato nel mese</span>
+                        <span class="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums">${fc(ms.totalEuro)}</span>
                     </div>
 
                     <button type="button" onclick="openMonthSummaryModal()"
@@ -2249,6 +2225,7 @@
             populateYearFilter();
             renderPayments();
             showToast('Incasso aggiornato');
+            if (reportCat !== null) openPaymentReport(reportCat);
         }
 
         const payCatName = p => { const c = catById(p.cat); return c ? c.name : (p.category || 'Altro'); };
@@ -2268,74 +2245,6 @@
             }).sort((a, b) => b.date.localeCompare(a.date));
         }
 
-        function renderPayments() {
-            const year = document.getElementById('filter-year').value || state.selectedDate.slice(0, 4);
-            const month = document.getElementById('filter-month').value || 'all';
-            const period = state.payments.filter(p => p && p.date && p.date.startsWith(year + '-') && (month === 'all' || p.date.slice(5, 7) === month));
-            const sums = {};
-            period.forEach(p => { const k = p.cat || '?'; sums[k] = (sums[k] || 0) + (Number(p.amount) || 0); });
-            const shown = state.categories.filter(c => !c.deleted || sums[c.id]);
-            if (state.categoryFilter !== 'Tutti' && !shown.some(c => c.id === state.categoryFilter)) state.categoryFilter = 'Tutti';
-            const cat = state.categoryFilter;
-
-            const filtered = getFilteredPayments();
-            document.getElementById('kpi-total-collected').textContent = fc(filtered.reduce((a, p) => a + (Number(p.amount) || 0), 0));
-            document.getElementById('kpi-total-count').textContent = `${filtered.length} ${filtered.length === 1 ? 'incasso registrato' : 'incassi registrati'}`;
-
-            let kpi = shown.map(c => `<div class="pal-${c.color} pc-soft flex items-center justify-between gap-2 p-2.5 rounded-xl"><span class="font-bold">${escapeHTML(c.name)}</span><span class="font-extrabold text-sm tabular-nums">${fc(sums[c.id] || 0)}</span></div>`).join('');
-            if (sums['?']) kpi += `<div class="pal-gray pc-soft flex items-center justify-between gap-2 p-2.5 rounded-xl"><span class="font-bold">Altro</span><span class="font-extrabold text-sm tabular-nums">${fc(sums['?'])}</span></div>`;
-            document.getElementById('kpi-cats').innerHTML = kpi;
-
-            document.getElementById('cat-filters').innerHTML = [['Tutti', 'Tutti']].concat(shown.map(c => [c.id, c.name])).map(([id, name]) =>
-                `<button type="button" onclick="setCategoryFilter('${id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${cat === id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">${escapeHTML(name)}</button>`).join('');
-
-            const annualBox = document.getElementById('annual-months-breakdown');
-            if (month === 'all') {
-                annualBox.classList.remove('hidden');
-                const catName = cat !== 'Tutti' ? ` (${escapeHTML((catById(cat) || {}).name || '')})` : '';
-                annualBox.innerHTML = `
-                    <div class="flex items-center justify-between mb-2.5">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600">Riepilogo 12 Mesi — ${escapeHTML(year)}${catName}</h3>
-                        <span class="text-[11px] text-slate-500">Clicca un mese per filtrarlo</span>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                        ${['01','02','03','04','05','06','07','08','09','10','11','12'].map(m => {
-                            const sum = state.payments.filter(p => p.date && p.date.startsWith(`${year}-${m}-`) && (cat === 'Tutti' || p.cat === cat)).reduce((a, p) => a + (Number(p.amount) || 0), 0);
-                            return `<button type="button" onclick="selectMonthFromAnnual('${m}')" class="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-teal-400 transition-colors text-left cursor-pointer">
-                                <span class="text-[11px] font-semibold text-slate-500 block">${getMonthNameIT(m).slice(0, 3)}</span>
-                                <span class="text-xs sm:text-sm font-extrabold text-slate-900 tabular-nums mt-0.5 block">${fc(sum)}</span></button>`;
-                        }).join('')}
-                    </div>`;
-            } else {
-                annualBox.classList.add('hidden');
-                annualBox.innerHTML = '';
-            }
-
-            const listEl = document.getElementById('payments-list-container');
-            listEl.innerHTML = filtered.length === 0
-                ? `<div class="p-10 text-center text-slate-500 text-sm">Nessun incasso trovato per i filtri selezionati.</div>`
-                : filtered.map(p => {
-                    const c = catById(p.cat);
-                    return `
-                    <div class="p-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors">
-                        <div class="space-y-1">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="text-sm font-bold text-slate-900 tabular-nums">${formatDateShortIT(p.date)}</span>
-                                <span class="pal-${c ? c.color : 'gray'} pc-soft text-[11px] font-bold px-2.5 py-0.5 rounded-full">${escapeHTML(payCatName(p))}</span>
-                            </div>
-                            ${p.note ? `<p class="text-xs text-slate-600">${escapeHTML(p.note)}</p>` : ''}
-                        </div>
-                        <div class="flex items-center justify-between sm:justify-end gap-3">
-                            <span class="text-base font-extrabold text-emerald-700 tabular-nums">${fc(p.amount)}</span>
-                            <div class="flex items-center gap-1">
-                                <button type="button" onclick="openEditPaymentModal('${escapeAttr(p.id)}')" title="Modifica incasso" class="p-2 rounded-lg text-slate-500 hover:text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                                <button type="button" onclick="deletePayment('${escapeAttr(p.id)}')" title="Elimina incasso" class="p-2 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('');
-            lucide.createIcons();
-        }
 
         function exportPaymentsCSV() {
             const rows = getFilteredPayments().map(p => [
@@ -2532,6 +2441,64 @@
             renderWorkView();
             renderPayments();
             showToast('Tariffa salvata');
+        }
+
+
+        // ---- schermata incassi: riquadro con totali per categoria cliccabili ----
+        let reportCat = null;
+
+        function periodPayments() {
+            const year = document.getElementById('filter-year').value || state.selectedDate.slice(0, 4);
+            const month = document.getElementById('filter-month').value || 'all';
+            return { year, month, list: state.payments.filter(p => p && p.date && p.date.startsWith(year + '-') && (month === 'all' || p.date.slice(5, 7) === month)) };
+        }
+
+        function renderPayments() {
+            const { list } = periodPayments();
+            const sums = {};
+            list.forEach(p => { const k = p.cat || '?'; sums[k] = (sums[k] || 0) + (Number(p.amount) || 0); });
+            document.getElementById('kpi-total-collected').textContent = fc(list.reduce((a, p) => a + (Number(p.amount) || 0), 0));
+            document.getElementById('kpi-total-count').textContent = `${list.length} ${list.length === 1 ? 'incasso registrato' : 'incassi registrati'}`;
+
+            const row = (id, color, name, amount) => `
+                <button type="button" onclick="openPaymentReport('${id}')"
+                    class="pal-${color} pc-soft w-full flex items-center justify-between gap-2 p-2.5 rounded-xl transition-opacity hover:opacity-85 cursor-pointer text-left">
+                    <span class="font-bold truncate">${escapeHTML(name)}</span>
+                    <span class="flex items-center gap-1.5 shrink-0">
+                        <span class="font-extrabold text-sm tabular-nums">${fc(amount)}</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
+                    </span>
+                </button>`;
+            let html = state.categories.filter(c => !c.deleted || sums[c.id]).map(c => row(c.id, c.color, c.name, sums[c.id] || 0)).join('');
+            if (sums['?']) html += row('?', 'gray', 'Altro', sums['?']);
+            document.getElementById('kpi-cats').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function openPaymentReport(catId) {
+            reportCat = catId;
+            const { year, month, list } = periodPayments();
+            const items = list.filter(p => (catId === '?' ? !p.cat : p.cat === catId)).sort((a, b) => b.date.localeCompare(a.date));
+            const total = items.reduce((a, p) => a + (Number(p.amount) || 0), 0);
+            const c = catById(catId);
+            const period = month === 'all' ? `Anno ${year}` : `${getMonthNameIT(month)} ${year}`;
+            const html = items.map(p => `
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <span class="text-sm font-bold text-slate-900 tabular-nums block">${formatDateShortIT(p.date)}</span>
+                        ${p.note ? `<span class="text-xs text-slate-600 block truncate">${escapeHTML(p.note)}</span>` : ''}
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <span class="text-base font-extrabold text-emerald-700 tabular-nums mr-1">${fc(p.amount)}</span>
+                        <button type="button" onclick="closeModal('info-modal'); openEditPaymentModal('${escapeAttr(p.id)}')" title="Modifica incasso" class="p-2 rounded-lg text-slate-500 hover:text-amber-700 hover:bg-amber-50 cursor-pointer"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="confirmDeletePayment('${escapeAttr(p.id)}')" title="Elimina incasso" class="p-2 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>`).join('') || `<p class="text-center py-8 text-slate-500 text-sm">Nessun incasso in questo periodo.</p>`;
+            openInfoModal(c ? c.name : 'Altro', `${period} · Totale ${fc(total)} · ${items.length} ${items.length === 1 ? 'incasso' : 'incassi'}`, html);
+        }
+
+        function confirmDeletePayment(id) {
+            if (confirm('Eliminare questo incasso?')) deletePayment(id);
         }
 
         // ==========================================
