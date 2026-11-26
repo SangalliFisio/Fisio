@@ -2623,7 +2623,7 @@
             const sel = chartSel !== null ? slots[chartSel] : null;
             const detail = sel
                 ? `<span class="block font-bold text-slate-900">${escapeHTML(sel.full)} · <span class="font-medium text-slate-500 tabular-nums">${fc(sel.total)}</span></span>` +
-                  cats.filter(c => (sel.byCat[c.id] || {}).euro > 0).map(c => `<span class="flex items-center justify-center gap-1.5 mt-1"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span><span class="font-semibold text-slate-900">${escapeHTML(c.name)}</span><span class="font-bold text-slate-900 tabular-nums">${fc(sel.byCat[c.id].euro)}</span></span>`).join('')
+                  cats.filter(c => (sel.byCat[c.id] || {}).euro > 0).map(c => `<span class="flex items-center justify-center gap-1.5 mt-1"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span><span class="font-semibold text-slate-900">${escapeHTML(c.name)} · <span class="font-medium text-slate-500 tabular-nums">${fc(sel.byCat[c.id].euro)}</span></span></span>`).join('')
                 : 'Tocca una colonna per vedere il dettaglio';
             const tog = (m, label) => `<button type="button" onclick="setChartMode('${m}')" class="px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${chartMode === m ? 'bg-white text-teal-700 shadow-xs' : 'text-slate-600'}">${label}</button>`;
             el.innerHTML = `
