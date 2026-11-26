@@ -81,6 +81,8 @@
         .peer:checked ~ .peer-checked\:border-teal-500 { border-color: #14b8a6; }
         .peer:checked ~ .peer-checked\:text-teal-700 { color: #0f766e; }
         [id$="-modal"] > div { overscroll-behavior: contain; }
+        :root { --bar-h: 4.25rem; }
+        @media (min-width: 640px) { :root { --bar-h: 4.5rem; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col selection:bg-teal-100 selection:text-teal-900">
@@ -135,8 +137,8 @@
             </div>
         </div>
         <!-- Barra mese/anno degli incassi: fa parte dell'intestazione -->
-        <div id="payments-bar" class="hidden max-w-5xl mx-auto px-4 pt-2">
-            <div id="month-picker-wrap" data-noswipe class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex items-center justify-center gap-2" style="position:relative">
+        <div id="payments-bar" class="hidden flex items-center max-w-5xl mx-auto px-4" style="height:var(--bar-h,4.25rem)">
+            <div id="month-picker-wrap" data-noswipe class="bg-white rounded-2xl p-3 flex items-center justify-center gap-2 w-full" style="position:relative">
                 <h1 class="sr-only">Registro Incassi</h1>
                 <button type="button" id="month-picker-btn" onclick="toggleMonthPicker()" aria-label="Mese" class="inline-flex items-center gap-1.5 bg-transparent text-slate-900 text-base sm:text-lg font-extrabold rounded-xl px-2 py-1 cursor-pointer">
                     <span id="month-picker-label">Tutti i mesi</span><i data-lucide="chevron-down" class="w-4 h-4"></i>
@@ -150,7 +152,7 @@
             </div>
         </div>
         <!-- Barra mese del report: fa parte dell'intestazione -->
-        <div id="report-bar" class="hidden max-w-5xl mx-auto px-4 pt-2">
+        <div id="report-bar" class="hidden flex items-center justify-center max-w-5xl mx-auto px-4" style="height:var(--bar-h,4.25rem)">
             <div class="flex items-center justify-center gap-3">
                 <button type="button" onclick="changeSelectedMonth(-1)" title="Mese precedente" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
                 <h2 id="report-month-label" class="text-base sm:text-lg font-extrabold text-slate-900 min-w-[150px] text-center tabular-nums"></h2>
@@ -162,13 +164,13 @@
     <!-- ========================================== -->
     <!-- CONTENUTO PRINCIPALE                       -->
     <!-- ========================================== -->
-    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-5 space-y-6">
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 pt-4 pb-5">
 
         
         <!-- ========================================== -->
         <!-- 2. SCHEDA CONTEGGIO LAVORO                 -->
         <!-- ========================================== -->
-        <section id="view-work" class="space-y-5">
+        <section id="view-work" class="space-y-4">
 
             <!-- Griglia delle 3 Tipologie di Lavoro -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="services-container">
@@ -196,14 +198,14 @@
         <!-- ========================================== -->
         <!-- 3. SCHEDA REGISTRO INCASSI                 -->
         <!-- ========================================== -->
-        <section id="view-report" class="hidden space-y-5">
+        <section id="view-report" class="hidden space-y-4">
             <!-- Riepilogo del mese -->
             <div id="month-summary-card" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between"></div>
             <!-- Grafico maturato per categoria -->
             <div id="report-chart-card" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs"></div>
         </section>
 
-        <section id="view-payments" class="hidden space-y-5">
+        <section id="view-payments" class="hidden space-y-4">
 
             <!-- Riepilogo Incassi (stesso stile del riepilogo mensile) -->
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
@@ -228,7 +230,6 @@
                     <span id="cash-box-label" class="text-xs font-medium text-slate-500">Totale Privati Cash</span>
                     <div class="flex flex-wrap items-baseline justify-between gap-2 mt-0.5">
                         <div id="kpi-cash-total" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">0,00 €</div>
-                        <span id="kpi-cash-count" class="text-xs font-semibold text-slate-500 tabular-nums"></span>
                     </div>
                     <span id="kpi-cash-due" class="text-xs font-bold text-rose-700 tabular-nums block mt-0.5"></span>
                 </div>
@@ -1320,7 +1321,9 @@
             closeModal('month-detail-modal');
             closeModal('category-detail-modal');
             closeModal('patient-detail-modal');
+            closeModal('info-modal');
             switchTab('work');
+            window.scrollTo({ top: 0 });
         }
 
         function resetCurrentDay() {
@@ -1362,6 +1365,14 @@
 
 
 
+
+        // misura la barra sotto l'intestazione della schermata lavoro e la applica a report e incassi
+        function syncBarHeight() {
+            const bar = document.getElementById('date-bar');
+            if (!bar) return;
+            const h = bar.getBoundingClientRect().height;
+            if (h > 0) document.documentElement.style.setProperty('--bar-h', Math.round(h * 100) / 100 + 'px');
+        }
 
         function syncHeaderHeight() {
             const header = document.querySelector('header');
@@ -2858,7 +2869,6 @@
             document.getElementById('cash-box-title').textContent = name;
             document.getElementById('cash-box-label').textContent = 'Totale ' + name;
             document.getElementById('kpi-cash-total').textContent = fc(st.paid);
-            document.getElementById('kpi-cash-count').textContent = `${st.count} ${st.count === 1 ? 'seduta' : 'sedute'}`;
             document.getElementById('kpi-cash-due').textContent = st.due > 0 ? `Da incassare: ${fc(st.due)}` : '';
             const color = c ? c.color : 'black';
             const rows = Object.entries(st.byPatient).filter(([, v]) => v.count > 0 || v.paid > 0)
@@ -2867,7 +2877,6 @@
                     class="pal-${color} pc-soft w-full flex items-center justify-between gap-2 p-2.5 rounded-xl transition-opacity hover:opacity-85 cursor-pointer text-left">
                     <div class="min-w-0">
                         <span class="font-bold block truncate">${escapeHTML(v.name)}</span>
-                        <span class="text-xs pc-mid tabular-nums">${v.count} ${v.count === 1 ? 'seduta' : 'sedute'}</span>
                     </div>
                     <span class="flex items-center gap-1.5 shrink-0">
                         <span class="text-right">
@@ -2911,11 +2920,11 @@
                     </div>
                 </div>`).join('') || `<p class="text-xs text-slate-500">Nessun incasso.</p>`;
             const days = v.days.slice().sort((x, y) => y.date.localeCompare(x.date)).map(d => `
-                <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px]">
+                <button type="button" onclick="selectDateFromModal('${d.date}')" title="Apri il giorno nella schermata lavoro"
+                    class="w-full text-left p-2 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100 active:scale-[.98] text-[11px] cursor-pointer transition-all">
                     <span class="font-semibold text-slate-800 block">${formatWeekdayDMY(d.date)}</span>
-                    <span class="font-bold text-slate-900 tabular-nums block">${d.count} ${d.count === 1 ? 'seduta' : 'sedute'}</span>
-                    <span class="text-slate-500 tabular-nums block">${fc(d.euro)}</span>
-                </div>`).join('') || `<p class="text-xs text-slate-500">Nessuna seduta.</p>`;
+                    <span class="font-bold text-slate-900 tabular-nums block">${fc(d.euro)}</span>
+                </button>`).join('') || `<p class="text-xs text-slate-500">Nessuna seduta.</p>`;
             const html = `
                 <div class="grid grid-cols-3 gap-2.5">${box('Maturato', fc(v.euro))}${box('Incassato', fc(v.paid))}${box('Da incassare', fc(v.due), v.due > 0 ? 'text-rose-700' : 'text-slate-900')}</div>
                 <button type="button" onclick="closeModal('info-modal'); openCashPayModal('${escapeAttr(id)}', true)" class="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold cursor-pointer">Registra incasso</button>
@@ -3072,7 +3081,7 @@
                 <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
                     <div class="min-w-0">
                         <span class="text-sm font-bold text-slate-900 tabular-nums block">${formatDateShortIT(p.date)}</span>
-                        ${p.note ? `<span class="text-xs text-slate-600 block truncate">${escapeHTML(p.note)}</span>` : ''}
+                        ${p.note ? `<span class="text-xs text-slate-600 block whitespace-normal break-words">${escapeHTML(p.note)}</span>` : ''}
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
                         <span class="text-base font-extrabold text-emerald-700 tabular-nums mr-1">${fc(p.amount)}</span>
@@ -3308,9 +3317,11 @@
             lucide.createIcons();
 
             syncHeaderHeight();
-            window.addEventListener('resize', syncHeaderHeight);
+            syncBarHeight();
+            window.addEventListener('resize', () => { syncHeaderHeight(); syncBarHeight(); });
             if (window.ResizeObserver) {
                 new ResizeObserver(syncHeaderHeight).observe(document.querySelector('header'));
+                new ResizeObserver(syncBarHeight).observe(document.getElementById('date-bar'));
             }
 
             // Chiede al browser di non cancellare i dati in caso di poco spazio
