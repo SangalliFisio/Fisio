@@ -1,6 +1,6 @@
 // Service worker: permette l'uso completamente offline.
 // Se modifichi i file dell'app, cambia il numero di versione qui sotto.
-const CACHE = 'fisiolog-v8';
+const CACHE = 'fisiolog-v9';
 const FILES = [
   './',
   './index.html',

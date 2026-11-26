@@ -73,6 +73,7 @@
         html.dark ::placeholder { color: #64748b; }
         /* classi aggiunte che non erano nel tailwind.css precompilato */
         .flex-nowrap { flex-wrap: nowrap; }
+        .mb-2\.5 { margin-bottom: 0.625rem; }
         .grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
         .overflow-x-auto { overflow-x: auto; }
         .whitespace-nowrap { white-space: nowrap; }
@@ -139,16 +140,7 @@
     <!-- ========================================== -->
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-5 space-y-6">
 
-        <!-- Stato ultimo backup (scorre con la pagina) -->
-        <div class="flex justify-center -mb-2">
-            <button type="button" onclick="shareBackup()" title="Salva un backup (Drive)"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer shrink-0 border-slate-200 bg-slate-100 text-slate-600"
-                id="backup-pill">
-                <span id="backup-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-                <span id="backup-text">Backup</span>
-            </button>
-        </div>
-
+        
         <!-- ========================================== -->
         <!-- 2. SCHEDA CONTEGGIO LAVORO                 -->
         <!-- ========================================== -->
@@ -197,7 +189,7 @@
                     <span class="text-xs font-medium text-slate-500">Totale incassato</span>
                     <div class="flex flex-wrap items-baseline justify-between gap-2 mt-0.5">
                         <div id="kpi-total-collected" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">0,00 €</div>
-                        <span id="kpi-total-count" class="text-xs font-semibold text-slate-500">0 incassi registrati</span>
+                        
                     </div>
                 </div>
 
@@ -216,23 +208,35 @@
                 <button type="button" onclick="closeModal('settings-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="space-y-5">
-                
                 <button type="button" onclick="openRatesModal()" class="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 border-teal-500 bg-teal-50 text-teal-800 text-sm font-bold cursor-pointer">
                     <span class="flex items-center gap-2"><i data-lucide="euro" class="w-4 h-4"></i>Tariffe</span><i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
-                <div>
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Categorie e sottocategorie</h4>
-                    <div id="settings-cats" class="space-y-2.5"></div>
-                </div>
+                <button type="button" onclick="openCatsModal()" class="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 border-teal-500 bg-teal-50 text-teal-800 text-sm font-bold cursor-pointer">
+                    <span class="flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4"></i>Categorie e sottocategorie</span><i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
                 <div>
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dati</h4>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" onclick="shareBackup()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer"><i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i><span>Backup su Drive</span></button>
-                        <label class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer"><i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-amber-600"></i><span>Ripristina</span><input type="file" id="import-json-input" onchange="importBackupJSON(event)" class="hidden"></label>
-                        <button type="button" onclick="exportPaymentsCSV()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer"><i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i><span>Esporta CSV</span></button>
+                    <div id="backup-pill" class="mb-2.5 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold border-slate-200 bg-slate-100 text-slate-600">
+                        <span id="backup-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                        <span id="backup-text">Backup</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="shareBackup()" class="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold whitespace-nowrap cursor-pointer"><i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i><span>Backup</span></button>
+                        <label class="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold whitespace-nowrap cursor-pointer"><i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-amber-600"></i><span>Ripristina</span><input type="file" id="import-json-input" onchange="importBackupJSON(event)" class="hidden"></label>
+                        <button type="button" onclick="exportPaymentsCSV()" class="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold whitespace-nowrap cursor-pointer"><i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i><span>Esporta CSV</span></button>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="categories-modal" class="fixed inset-0 z-[60] hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl border border-slate-100 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5 text-teal-600"></i>Categorie e sottocategorie</h3>
+                <button type="button" onclick="closeModal('categories-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="settings-cats" class="space-y-2.5"></div>
         </div>
     </div>
 
@@ -1633,6 +1637,24 @@
             const s = si ? (c.subs || []).find(x => x.id === si) : null;
             return s ? s.name : c.name;
         }
+        // voci "bonus" (sottocategorie con questo nome): non contano nel numero di accessi
+        function isBonusKey(k) {
+            const [ci, si] = k.split(':');
+            const c = catById(ci);
+            const sub = si && c ? (c.subs || []).find(x => x.id === si) : null;
+            return !!sub && String(sub.name).trim().toLowerCase() === 'bonus';
+        }
+        function countNoBonus(bb) {
+            const bonus = Object.entries(bb.subs || {}).filter(([k]) => isBonusKey(k)).reduce((a, [, v]) => a + v.count, 0);
+            return bb.count - bonus;
+        }
+
+        function formatWeekdayDMY(isoDate) {
+            if (!isoDate) return '';
+            const [y, m, d] = isoDate.split('-').map(Number);
+            const wd = new Date(y, m - 1, d).toLocaleDateString('it-IT', { weekday: 'long' });
+            return `${wd} ${formatDateShortIT(isoDate)}`;
+        }
         const visibleCats = ms => state.categories.filter(c => !c.deleted || (ms && ms.byCat[c.id]));
 
         // ---- impostazioni salvate (categorie, tariffe, aspetto) ----
@@ -1652,7 +1674,7 @@
                 deleted: !!c.deleted,
                 purged: !!c.purged,
                 icon: CAT_ICONS.includes(c.icon) ? c.icon : null,
-                subs: (Array.isArray(c.subs) ? c.subs : []).map(s => ({ id: String(s.id), name: String(s.name || 'Sottocategoria'), deleted: !!s.deleted }))
+                subs: (Array.isArray(c.subs) ? c.subs : []).map(s => ({ id: String(s.id), name: String(s.name || 'Sottocategoria'), deleted: !!s.deleted, purged: !!s.purged }))
             };
         }
 
@@ -2009,13 +2031,14 @@
             document.getElementById('category-detail-title').textContent = c.name;
             document.getElementById('category-detail-subtitle').textContent = getMonthLabelIT(prefix);
 
-            const subTxt = Object.entries(b.subs).filter(([k]) => k.includes(':')).map(([k, v]) => `${keyLabel(k)}: ${v.count}`).join(' · ');
+            const subTxt = Object.entries(b.subs).filter(([k]) => k.includes(':') && !isBonusKey(k)).map(([k, v]) => `${keyLabel(k)}: ${v.count}`).join(' · ');
+            const accessi = countNoBonus(b);
             const top = `
                 <div class="pal-${c.color} pc-soft p-4 rounded-xl flex items-center justify-between gap-2">
                     <div>
                         <span class="text-xs font-semibold pc-mid block">Totale maturato mese</span>
                         <span class="text-2xl font-extrabold tabular-nums">${fc(b.euro)}</span>
-                        <span class="text-xs pc-mid block mt-0.5 tabular-nums">${b.count} ${plural(c.unit, b.count)}${subTxt ? ' (' + escapeHTML(subTxt) + ')' : ''}</span>
+                        <span class="text-xs pc-mid block mt-0.5 tabular-nums">${accessi} ${plural(c.unit, accessi)}${subTxt ? ' (' + escapeHTML(subTxt) + ')' : ''}</span>
                     </div>
                 </div>`;
             let list;
@@ -2025,11 +2048,12 @@
                 const days = ms.daysBreakdown.filter(d => d.byCat[id]);
                 list = `<h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Dettaglio giornate del mese</h4><div class="space-y-1.5">${days.length ? days.map(d => {
                     const bb = d.byCat[id];
-                    const parts = Object.entries(bb.subs).filter(([k]) => k.includes(':')).map(([k, v]) => `${keyLabel(k)}: ${v.count}`).join(' · ');
+                    const parts = Object.entries(bb.subs).filter(([k]) => k.includes(':') && !isBonusKey(k)).map(([k, v]) => `${keyLabel(k)}: ${v.count}`).join(' · ');
+                    const nAcc = countNoBonus(bb);
                     return `
                         <button type="button" onclick="selectDateFromModal('${d.date}')" class="w-full p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-between gap-2 text-left text-xs cursor-pointer">
-                            <div class="min-w-0"><span class="font-semibold text-slate-800 block">${formatDateExtendedIT(d.date)}</span>${parts ? `<span class="text-[11px] text-slate-500">${escapeHTML(parts)}</span>` : ''}</div>
-                            <span class="font-bold text-slate-900 tabular-nums shrink-0">${bb.count} ${plural(c.unit, bb.count)} · ${fc(bb.euro)}</span>
+                            <div class="min-w-0"><span class="font-semibold text-slate-800 block">${formatWeekdayDMY(d.date)}</span>${parts ? `<span class="text-[11px] text-slate-500">${escapeHTML(parts)}</span>` : ''}</div>
+                            <span class="font-bold text-slate-900 tabular-nums shrink-0">${nAcc} ${plural(c.unit, nAcc)} · ${fc(bb.euro)}</span>
                         </button>`;
                 }).join('') : `<p class="text-xs text-slate-500">Nessuna prestazione questo mese.</p>`}</div>`;
             }
@@ -2049,7 +2073,7 @@
             document.getElementById('patient-detail-subtitle').textContent = `${getMonthLabelIT(prefix)} · Trattamenti`;
             const dates = sessions.length ? sessions.map(s => `
                 <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                    <span class="font-semibold text-slate-800">${formatDateExtendedIT(s.date)}</span>
+                    <span class="font-semibold text-slate-800">${formatWeekdayDMY(s.date)}</span>
                     <span class="font-bold text-slate-900 tabular-nums">${s.count} ${s.count === 1 ? 'seduta' : 'sedute'} · ${fc(s.amount)}</span>
                 </div>`).join('') : `<p class="text-xs text-slate-500">Nessuna seduta in questo mese.</p>`;
             document.getElementById('patient-detail-content').innerHTML = `
@@ -2230,14 +2254,13 @@
                     </div>
                     ${c.mode === 'patients' ? '' : `<div class="mt-1.5 space-y-0.5">${activeSubs(c).map(s => subRow(c, s)).join('')}
                         <button type="button" onclick="openCatForm('sub',null,'${c.id}')" class="ml-5 mt-1 text-[11px] font-bold pc-mid cursor-pointer">+ Sottocategoria</button></div>`}
-                    <div class="mt-2 pt-2 border-t border-slate-200 flex justify-end"><button type="button" onclick="purgeCat('${c.id}')" class="text-[11px] font-bold text-rose-700 cursor-pointer">Elimina definitivamente</button></div>
                 </div>`).join('');
             html += `<button type="button" onclick="openCatForm('cat',null)" class="w-full px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-bold cursor-pointer">+ Nuova categoria</button>`;
 
             const gone = [];
             state.categories.forEach(c => {
                 if (c.deleted && !c.purged) gone.push(`<div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500 truncate">${escapeHTML(c.name)}</span><button type="button" onclick="restoreCat('${c.id}')" class="text-[11px] font-bold text-teal-700 cursor-pointer shrink-0">Ripristina</button><button type="button" onclick="purgeCat('${c.id}')" class="text-[11px] font-bold text-rose-700 cursor-pointer shrink-0">Elimina definitivamente</button></div>`);
-                (c.subs || []).forEach(s => { if (s.deleted && !c.deleted) gone.push(`<div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500 truncate">${escapeHTML(c.name)} › ${escapeHTML(s.name)}</span><button type="button" onclick="restoreSub('${c.id}','${s.id}')" class="text-[11px] font-bold text-teal-700 cursor-pointer shrink-0">Ripristina</button></div>`); });
+                (c.subs || []).forEach(s => { if (s.deleted && !s.purged && !c.deleted) gone.push(`<div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500 truncate">${escapeHTML(c.name)} › ${escapeHTML(s.name)}</span><button type="button" onclick="restoreSub('${c.id}','${s.id}')" class="text-[11px] font-bold text-teal-700 cursor-pointer shrink-0">Ripristina</button><button type="button" onclick="purgeSub('${c.id}','${s.id}')" class="text-[11px] font-bold text-rose-700 cursor-pointer shrink-0">Elimina definitivamente</button></div>`); });
             });
             if (gone.length) html += `<div class="p-3 rounded-xl border border-slate-200 space-y-1.5"><span class="text-[11px] font-bold text-slate-500 uppercase">Eliminate (i dati restano)</span>${gone.join('')}</div>`;
             document.getElementById('settings-cats').innerHTML = html;
@@ -2274,6 +2297,14 @@
             s.deleted = true;
             afterCatChange();
             showToast('Sottocategoria eliminata');
+        }
+        function purgeSub(cid, sid) {
+            const c = catById(cid), s = c && c.subs.find(x => x.id === sid);
+            if (!s || !confirm(`Eliminare DEFINITIVAMENTE la sottocategoria "${s.name}"?\n\nNon potrai ripristinarla. I dati già registrati restano visibili nei report e negli incassi.`)) return;
+            s.deleted = true;
+            s.purged = true;
+            afterCatChange();
+            showToast('Sottocategoria eliminata definitivamente');
         }
         function restoreCat(id) { const c = catById(id); if (c) { c.deleted = false; afterCatChange(); } }
         function restoreSub(cid, sid) { const c = catById(cid), s = c && c.subs.find(x => x.id === sid); if (s) { s.deleted = false; afterCatChange(); } }
@@ -2339,6 +2370,12 @@
         }
 
         // ---- tariffe ----
+        function openCatsModal() {
+            renderSettings();
+            document.getElementById('categories-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
         function openRatesModal() {
             renderRates();
             document.getElementById('rates-modal').classList.remove('hidden');
@@ -2401,7 +2438,6 @@
             const sums = {};
             list.forEach(p => { const k = p.cat || '?'; sums[k] = (sums[k] || 0) + (Number(p.amount) || 0); });
             document.getElementById('kpi-total-collected').textContent = fc(list.reduce((a, p) => a + (Number(p.amount) || 0), 0));
-            document.getElementById('kpi-total-count').textContent = `${list.length} ${list.length === 1 ? 'incasso registrato' : 'incassi registrati'}`;
 
             const row = (id, color, name, amount) => `
                 <button type="button" onclick="openPaymentReport('${id}')"
@@ -2583,14 +2619,15 @@
             const legend = cats.map(c => `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 whitespace-nowrap"><span class="w-2 h-2 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span>${escapeHTML(c.name)}</span>`).join('');
             const sel = chartSel !== null ? slots[chartSel] : null;
             const detail = sel
-                ? `<span class="block font-bold text-slate-900">${escapeHTML(sel.full)} · ${fc(sel.total)}</span>` +
-                  cats.filter(c => (sel.byCat[c.id] || {}).euro > 0).map(c => `<span class="flex items-center justify-center gap-1.5 mt-1"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span><span class="font-semibold text-slate-700">${escapeHTML(c.name)}</span><span class="font-bold text-slate-900 tabular-nums">${fc(sel.byCat[c.id].euro)}</span></span>`).join('')
+                ? `<span class="block font-bold text-slate-900">${escapeHTML(sel.full)}</span>` +
+                  `<span class="block mt-0.5 text-slate-500">Totale periodo <b class="text-slate-900 tabular-nums">${fc(sel.total)}</b></span>` +
+                  cats.filter(c => (sel.byCat[c.id] || {}).euro > 0).map(c => `<span class="flex items-center justify-center gap-1.5 mt-1"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span><span class="font-semibold text-slate-900">${escapeHTML(c.name)}</span><span class="font-bold text-slate-900 tabular-nums">${fc(sel.byCat[c.id].euro)}</span></span>`).join('')
                 : 'Tocca una colonna per vedere il dettaglio';
             const tog = (m, label) => `<button type="button" onclick="setChartMode('${m}')" class="px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${chartMode === m ? 'bg-white text-teal-700 shadow-xs' : 'text-slate-600'}">${label}</button>`;
             el.innerHTML = `
                 <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
                     <h2 class="text-base font-extrabold text-slate-900">Maturato per categoria</h2>
-                    <div class="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/80">${tog('week', 'Settimana')}${tog('year', 'Anno')}</div>
+                    <div class="flex items-center gap-2"><button type="button" onclick="chartGoToday()" class="px-3 py-1.5 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold cursor-pointer">Oggi</button><div class="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/80">${tog('week', 'Settimana')}${tog('year', 'Anno')}</div></div>
                 </div>
                 <div class="mt-3 flex items-center justify-center gap-3">
                     <button type="button" onclick="shiftChart(-1)" title="Precedente" class="${CH_NAV}"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
@@ -2603,6 +2640,7 @@
                 <div class="mt-3 text-xs text-center text-slate-500 min-h-[3rem]">${detail}</div>`;
         }
 
+        function chartGoToday() { chartAnchor = getTodayISO(); chartSel = null; renderChart(); lucide.createIcons(); }
         function setChartMode(m) { chartMode = m; chartSel = null; renderChart(); lucide.createIcons(); }
         function selectChartBar(i) { chartSel = chartSel === i ? null : i; renderChart(); lucide.createIcons(); }
         function shiftChart(d) {
