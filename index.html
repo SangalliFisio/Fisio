@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" data-font="tecnico">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FisioLog</title>
     <meta name="theme-color" content="#0d9488">
     <link rel="manifest" href="manifest.webmanifest">
-    <script>try{var _s=JSON.parse(localStorage.getItem("fisioconto_settings_v1")||"{}");if(_s.theme==="dark")document.documentElement.classList.add("dark");if(_s.font)document.documentElement.dataset.font=_s.font}catch(e){}</script>
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="tailwind.css">
@@ -72,6 +71,14 @@
         html.dark [class*="text-amber-8"], html.dark [class*="text-amber-7"] { color: #fcd34d; }
         html.dark [class*="text-rose-8"], html.dark [class*="text-rose-7"] { color: #fda4af; }
         html.dark ::placeholder { color: #64748b; }
+        /* classi aggiunte che non erano nel tailwind.css precompilato */
+        .flex-nowrap { flex-wrap: nowrap; }
+        .grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+        .overflow-x-auto { overflow-x: auto; }
+        .whitespace-nowrap { white-space: nowrap; }
+        .peer:checked ~ .peer-checked\:bg-teal-50 { background-color: #f0fdfa; }
+        .peer:checked ~ .peer-checked\:border-teal-500 { border-color: #14b8a6; }
+        .peer:checked ~ .peer-checked\:text-teal-700 { color: #0f766e; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col selection:bg-teal-100 selection:text-teal-900">
@@ -209,12 +216,7 @@
                 <button type="button" onclick="closeModal('settings-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="space-y-5">
-                <div>
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Aspetto</h4>
-                    <div id="settings-theme" class="grid grid-cols-2 gap-2"></div>
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mt-3 mb-2">Stile del testo</h4>
-                    <div id="settings-fonts" class="grid grid-cols-2 gap-2"></div>
-                </div>
+                
                 <button type="button" onclick="openRatesModal()" class="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 border-teal-500 bg-teal-50 text-teal-800 text-sm font-bold cursor-pointer">
                     <span class="flex items-center gap-2"><i data-lucide="euro" class="w-4 h-4"></i>Tariffe</span><i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
@@ -674,7 +676,7 @@
             selectedPrivatePatient: DEFAULT_PATIENTS[0],
             payments: [],
             theme: 'light',
-            font: 'classico',
+            font: 'tecnico',
             categories: null,
             rateHistory: null,
             categoryFilter: 'Tutti',
@@ -1203,18 +1205,15 @@
         // IMPOSTAZIONI: TEMA E TARIFFE
         // ==========================================
         function applyTheme() {
-            document.documentElement.classList.toggle('dark', state.theme === 'dark');
-            document.documentElement.dataset.font = state.font;
+            // solo tema chiaro e font fisso "tecnico"
+            state.theme = 'light';
+            state.font = 'tecnico';
+            document.documentElement.classList.remove('dark');
+            document.documentElement.dataset.font = 'tecnico';
             const meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#0b1220' : '#0d9488');
+            if (meta) meta.setAttribute('content', '#0d9488');
         }
 
-        function setTheme(theme) {
-            state.theme = theme === 'dark' ? 'dark' : 'light';
-            applyTheme();
-            persistChanges({ syncCloud: false });
-            renderSettings();
-        }
 
 
 
@@ -1594,6 +1593,7 @@
             gray:   ['#f8fafc', '#e2e8f0', '#0f172a', '#475569', '#334155', '#cbd5e1']
         };
         const PALETTE_NAMES = { red: 'Rosso', yellow: 'Giallo', brown: 'Marrone', green: 'Verde', blue: 'Blu', indigo: 'Indaco', teal: 'Verde acqua', pink: 'Rosa', gray: 'Grigio' };
+        const CAT_ICONS = ['stethoscope', 'heart-pulse', 'activity', 'syringe', 'pill', 'bandage', 'brain', 'bone', 'hand-heart', 'accessibility', 'baby', 'ambulance', 'hospital', 'home', 'users', 'user-check', 'footprints', 'dumbbell'];
         const FONTS = {
             classico: ['Classico', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'],
             moderno:  ['Moderno', "'Poppins', sans-serif"],
@@ -1650,6 +1650,8 @@
                 mode: c.mode === 'patients' ? 'patients' : 'count',
                 unit: String(c.unit || 'prestazione'),
                 deleted: !!c.deleted,
+                purged: !!c.purged,
+                icon: CAT_ICONS.includes(c.icon) ? c.icon : null,
                 subs: (Array.isArray(c.subs) ? c.subs : []).map(s => ({ id: String(s.id), name: String(s.name || 'Sottocategoria'), deleted: !!s.deleted }))
             };
         }
@@ -1675,8 +1677,8 @@
         function applySettingsObj(st, withLook) {
             st = st && typeof st === 'object' ? st : {};
             if (withLook) {
-                state.theme = st.theme === 'dark' ? 'dark' : 'light';
-                state.font = FONTS[st.font] ? st.font : 'classico';
+                state.theme = 'light';
+                state.font = 'tecnico';
             }
             if (Array.isArray(st.categories) && st.categories.length) {
                 state.categories = st.categories.map(sanitizeCat);
@@ -1803,11 +1805,18 @@
         const BTN_MINUS = 'rounded-xl border border-slate-200 bg-white hover:bg-slate-100 active:scale-95 text-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0';
         const BTN_PLUS = 'rounded-xl pc-btn active:scale-95 flex items-center justify-center shadow-xs transition-all cursor-pointer shrink-0';
 
+        function catIconOf(c) {
+            if (c.icon) return c.icon;
+            if (c.mode === 'patients') return 'user-check';
+            if (activeSubs(c).length) return 'home';
+            return c.id === 'ambulatorio' ? 'stethoscope' : 'activity';
+        }
+
         function renderCategoryCard(c, ds, rec) {
             const subs = activeSubs(c);
             const b = ds.byCat[c.id] || { count: 0, euro: 0, subs: {} };
             const rateTxt = (c.mode === 'patients' || !subs.length) ? `${rateFor(c.id, state.selectedDate)} € / ${escapeHTML(c.unit)}` : '';
-            const icon = c.mode === 'patients' ? 'user-check' : (subs.length ? 'home' : (c.id === 'ambulatorio' ? 'stethoscope' : 'activity'));
+            const icon = catIconOf(c);
             const head = `
                 <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -2197,24 +2206,11 @@
             document.getElementById('settings-modal').classList.remove('hidden');
         }
 
-        function setFont(f) {
-            state.font = FONTS[f] ? f : 'classico';
-            applyTheme();
-            persistChanges({ syncCloud: false });
-            renderSettings();
-        }
-
         const IC_BTN = 'p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer';
 
         function renderSettings() {
             const on = 'border-teal-500 bg-teal-50 text-teal-800';
             const off = 'border-slate-200 bg-white text-slate-600';
-            document.getElementById('settings-theme').innerHTML = [['light', 'Chiaro', 'sun'], ['dark', 'Scuro', 'moon']].map(([k, l, i]) => `
-                <button type="button" onclick="setTheme('${k}')" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-bold cursor-pointer transition-colors ${state.theme === k ? on : off}">
-                    <i data-lucide="${i}" class="w-4 h-4"></i><span>${l}</span></button>`).join('');
-            document.getElementById('settings-fonts').innerHTML = Object.entries(FONTS).map(([k, [l, fam]]) => `
-                <button type="button" onclick="setFont('${k}')" style="font-family:${fam}" class="px-3 py-2.5 rounded-xl border-2 text-sm font-bold cursor-pointer transition-colors ${state.font === k ? on : off}">${l}</button>`).join('');
-
             const subRow = (c, s) => `
                 <div class="flex items-center justify-between gap-2 pl-5 text-xs">
                     <span class="font-semibold text-slate-700 truncate">${escapeHTML(s.name)}</span>
@@ -2234,12 +2230,13 @@
                     </div>
                     ${c.mode === 'patients' ? '' : `<div class="mt-1.5 space-y-0.5">${activeSubs(c).map(s => subRow(c, s)).join('')}
                         <button type="button" onclick="openCatForm('sub',null,'${c.id}')" class="ml-5 mt-1 text-[11px] font-bold pc-mid cursor-pointer">+ Sottocategoria</button></div>`}
+                    <div class="mt-2 pt-2 border-t border-slate-200 flex justify-end"><button type="button" onclick="purgeCat('${c.id}')" class="text-[11px] font-bold text-rose-700 cursor-pointer">Elimina definitivamente</button></div>
                 </div>`).join('');
             html += `<button type="button" onclick="openCatForm('cat',null)" class="w-full px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-bold cursor-pointer">+ Nuova categoria</button>`;
 
             const gone = [];
             state.categories.forEach(c => {
-                if (c.deleted) gone.push(`<div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500 truncate">${escapeHTML(c.name)}</span><button type="button" onclick="restoreCat('${c.id}')" class="text-[11px] font-bold text-teal-700 cursor-pointer shrink-0">Ripristina</button></div>`);
+                if (c.deleted && !c.purged) gone.push(`<div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500 truncate">${escapeHTML(c.name)}</span><button type="button" onclick="restoreCat('${c.id}')" class="text-[11px] font-bold text-teal-700 cursor-pointer shrink-0">Ripristina</button><button type="button" onclick="purgeCat('${c.id}')" class="text-[11px] font-bold text-rose-700 cursor-pointer shrink-0">Elimina definitivamente</button></div>`);
                 (c.subs || []).forEach(s => { if (s.deleted && !c.deleted) gone.push(`<div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500 truncate">${escapeHTML(c.name)} › ${escapeHTML(s.name)}</span><button type="button" onclick="restoreSub('${c.id}','${s.id}')" class="text-[11px] font-bold text-teal-700 cursor-pointer shrink-0">Ripristina</button></div>`); });
             });
             if (gone.length) html += `<div class="p-3 rounded-xl border border-slate-200 space-y-1.5"><span class="text-[11px] font-bold text-slate-500 uppercase">Eliminate (i dati restano)</span>${gone.join('')}</div>`;
@@ -2262,6 +2259,15 @@
             afterCatChange();
             showToast('Categoria eliminata');
         }
+        function purgeCat(id) {
+            const c = catById(id);
+            if (!c || !confirm(`Eliminare DEFINITIVAMENTE la categoria "${c.name}"?\n\nNon potrai ripristinarla. I dati già registrati (conteggi, maturato e incassi) restano visibili nei report e negli incassi.`)) return;
+            c.deleted = true;
+            c.purged = true;
+            afterCatChange();
+            showToast('Categoria eliminata definitivamente');
+        }
+
         function deleteSub(cid, sid) {
             const c = catById(cid), s = c && c.subs.find(x => x.id === sid);
             if (!s || !confirm(`Eliminare la sottocategoria "${s.name}"?\n\nI dati già registrati restano; non potrai più aggiungere nuove prestazioni. Potrai ripristinarla dalle impostazioni.`)) return;
@@ -2280,6 +2286,12 @@
             const title = (id ? 'Modifica ' : 'Nuova ') + (kind === 'cat' ? 'categoria' : 'sottocategoria');
             const inp = 'w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-teal-500';
             const cur = item && kind === 'cat' ? item.color : 'blue';
+            const curIcon = kind === 'cat' && item ? catIconOf(item) : 'activity';
+            const icons = kind !== 'cat' ? '' : `
+                <div><span class="block text-xs font-semibold text-slate-600 mb-1.5">Icona</span>
+                <div class="grid grid-cols-6 gap-2">${CAT_ICONS.map(n => `
+                    <label class="cursor-pointer" title="${n}"><input type="radio" name="cf-icon" value="${n}" class="peer sr-only" ${n === curIcon ? 'checked' : ''}>
+                    <span class="flex items-center justify-center h-10 rounded-xl border-2 border-slate-200 bg-white text-slate-600 peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-700"><i data-lucide="${n}" class="w-5 h-5"></i></span></label>`).join('')}</div></div>`;
             const colors = kind !== 'cat' ? '' : `
                 <div><span class="block text-xs font-semibold text-slate-600 mb-1.5">Colore</span>
                 <div class="flex flex-wrap gap-2">${Object.keys(PALETTES).map(n => `
@@ -2291,7 +2303,7 @@
             document.getElementById('cat-form-title').textContent = title;
             document.getElementById('cat-form-body').innerHTML = `
                 <div><label class="block text-xs font-semibold text-slate-600 mb-1" for="cf-name">Nome</label>
-                <input id="cf-name" type="text" maxlength="40" required value="${item ? escapeHTML(item.name) : ''}" class="${inp}"></div>${colors}${rate}`;
+                <input id="cf-name" type="text" maxlength="40" required value="${item ? escapeHTML(item.name) : ''}" class="${inp}"></div>${colors}${icons}${rate}`;
             document.getElementById('cat-form-modal').classList.remove('hidden');
             lucide.createIcons();
         }
@@ -2305,10 +2317,11 @@
             const rate = rateEl ? (parseFloat(String(rateEl.value).replace(',', '.')) || 0) : 0;
             if (f.kind === 'cat') {
                 const color = (document.querySelector('input[name="cf-color"]:checked') || {}).value || 'gray';
-                if (f.id) { const c = catById(f.id); c.name = name; c.color = color; }
+                const icon = (document.querySelector('input[name="cf-icon"]:checked') || {}).value || 'activity';
+                if (f.id) { const c = catById(f.id); c.name = name; c.color = color; c.icon = icon; }
                 else {
                     const id = 'c' + Date.now().toString(36);
-                    state.categories.push({ id, name, color, mode: 'count', unit: 'prestazione', deleted: false, subs: [] });
+                    state.categories.push({ id, name, color, icon, mode: 'count', unit: 'prestazione', deleted: false, subs: [] });
                     state.rateHistory[id] = [{ from: '0000-01-01', rate }];
                 }
             } else {
@@ -2470,6 +2483,7 @@
                     </button>`;
             }).join('');
 
+            const avgDay = ms.daysBreakdown.length ? ms.totalEuro / ms.daysBreakdown.length : 0;
             const monthCard = document.getElementById('month-summary-card');
             if (monthCard) {
                 monthCard.innerHTML = `
@@ -2484,8 +2498,10 @@
                         <span class="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums">${fc(ms.totalEuro)}</span>
                     </div>
 
-                    <button type="button" onclick="openMonthSummaryModal()"
-                        class="mt-3 w-full py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold text-center transition-all cursor-pointer">Dettaglio mese</button>
+                    <div class="mt-3 grid grid-cols-2 gap-2.5">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80"><span class="text-[11px] font-medium text-slate-500 block">Giorni lavorati</span><span class="text-base font-extrabold text-slate-900 tabular-nums mt-0.5 block">${ms.daysBreakdown.length}</span></div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80"><span class="text-[11px] font-medium text-slate-500 block">Media / giorno</span><span class="text-base font-extrabold text-slate-900 tabular-nums mt-0.5 block">${fc(avgDay)}</span></div>
+                    </div>
 
                     <div class="mt-3 space-y-2 text-xs">${rows}</div>`;
             }
@@ -2563,14 +2579,12 @@
                 g += `<rect x="${L + i * sw}" y="${T}" width="${sw}" height="${H - T}" fill="transparent" style="cursor:pointer" onclick="selectChartBar(${i})"/>`;
             });
 
-            const totals = {};
-            slots.forEach(s => Object.entries(s.byCat).forEach(([id, b]) => { totals[id] = (totals[id] || 0) + b.euro; }));
             const periodTotal = slots.reduce((a, s) => a + s.total, 0);
-            const legend = cats.map(c => `<span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700"><span class="w-2.5 h-2.5 rounded-sm" style="background:${PALETTES[c.color][3]}"></span>${escapeHTML(c.name)} <span class="text-slate-500 tabular-nums">${fc(totals[c.id] || 0)}</span></span>`).join('');
+            const legend = cats.map(c => `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 whitespace-nowrap"><span class="w-2 h-2 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span>${escapeHTML(c.name)}</span>`).join('');
             const sel = chartSel !== null ? slots[chartSel] : null;
             const detail = sel
-                ? `<span class="font-bold text-slate-900">${escapeHTML(sel.full)}</span> · ${fc(sel.total)}` +
-                  cats.filter(c => (sel.byCat[c.id] || {}).euro > 0).map(c => `<br>${escapeHTML(c.name)} ${fc(sel.byCat[c.id].euro)}`).join('')
+                ? `<span class="block font-bold text-slate-900">${escapeHTML(sel.full)} · ${fc(sel.total)}</span>` +
+                  cats.filter(c => (sel.byCat[c.id] || {}).euro > 0).map(c => `<span class="flex items-center justify-center gap-1.5 mt-1"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${PALETTES[c.color][3]}"></span><span class="font-semibold text-slate-700">${escapeHTML(c.name)}</span><span class="font-bold text-slate-900 tabular-nums">${fc(sel.byCat[c.id].euro)}</span></span>`).join('')
                 : 'Tocca una colonna per vedere il dettaglio';
             const tog = (m, label) => `<button type="button" onclick="setChartMode('${m}')" class="px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${chartMode === m ? 'bg-white text-teal-700 shadow-xs' : 'text-slate-600'}">${label}</button>`;
             el.innerHTML = `
@@ -2585,8 +2599,8 @@
                 </div>
                 <div class="text-center text-xs text-slate-500 mt-1">Totale periodo <b class="text-slate-900 tabular-nums">${fc(periodTotal)}</b></div>
                 <svg viewBox="0 0 ${W} ${H}" class="w-full h-auto mt-2 text-slate-600" role="img" aria-label="Grafico del maturato per categoria">${g}</svg>
-                <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 justify-center">${legend}</div>
-                <p class="mt-3 text-xs text-center text-slate-500 min-h-[3rem]">${detail}</p>`;
+                <div class="mt-2 flex flex-nowrap justify-center gap-3 overflow-x-auto">${legend}</div>
+                <div class="mt-3 text-xs text-center text-slate-500 min-h-[3rem]">${detail}</div>`;
         }
 
         function setChartMode(m) { chartMode = m; chartSel = null; renderChart(); lucide.createIcons(); }
@@ -2602,6 +2616,32 @@
         // ==========================================
         // INIZIALIZZAZIONE
         // ==========================================
+        // ==========================================
+        // SWIPE TRA LE SEZIONI (lavoro / report / incassi)
+        // ==========================================
+        (function initTabSwipe() {
+            const ORDER = ['work', 'report', 'payments'];
+            let sx = 0, sy = 0, t0 = 0, active = false;
+            document.addEventListener('touchstart', e => {
+                const blocked = e.touches.length !== 1
+                    || e.target.closest('input, select, textarea, [data-noswipe]')
+                    || document.querySelector('.fixed.inset-0:not(.hidden)');
+                active = !blocked;
+                if (active) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; t0 = Date.now(); }
+            }, { passive: true });
+            document.addEventListener('touchcancel', () => { active = false; }, { passive: true });
+            document.addEventListener('touchend', e => {
+                if (!active) return;
+                active = false;
+                const t = e.changedTouches[0];
+                const dx = t.clientX - sx, dy = t.clientY - sy;
+                if (Date.now() - t0 > 700 || Math.abs(dx) < 60 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
+                const current = ORDER.find(k => !document.getElementById('view-' + k).classList.contains('hidden'));
+                const next = ORDER.indexOf(current) + (dx < 0 ? 1 : -1);
+                if (next >= 0 && next < ORDER.length) switchTab(ORDER[next]);
+            }, { passive: true });
+        })();
+
         window.addEventListener('DOMContentLoaded', () => {
             loadState();
             applyTheme();
