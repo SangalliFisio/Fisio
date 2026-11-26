@@ -203,6 +203,24 @@
                 <div id="kpi-cats" class="mt-3.5 space-y-2 text-xs"></div>
             </div>
 
+            <!-- Totale Privati Cash (gruppo 2: separato dai totali del gruppo 1) -->
+            <div id="cash-box" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-between gap-2 pb-3.5 border-b border-slate-100">
+                    <h2 id="cash-box-title" class="text-base sm:text-lg font-extrabold text-slate-900">Privati Cash</h2>
+                    <span id="cash-box-period" class="text-xs font-semibold text-slate-500 tabular-nums"></span>
+                </div>
+
+                <div class="mt-3.5">
+                    <span id="cash-box-label" class="text-xs font-medium text-slate-500">Totale Privati Cash</span>
+                    <div class="flex flex-wrap items-baseline justify-between gap-2 mt-0.5">
+                        <div id="kpi-cash-total" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">0,00 €</div>
+                        <span id="kpi-cash-count" class="text-xs font-semibold text-slate-500 tabular-nums"></span>
+                    </div>
+                </div>
+
+                <div id="kpi-cash-rows" class="mt-3.5 space-y-2 text-xs"></div>
+            </div>
+
         </section>
 
     </main>
@@ -343,6 +361,26 @@
     <!-- ========================================== -->
     <!-- MODALE: GESTIONE PAZIENTI PRIVATI          -->
     <!-- ========================================== -->
+    <div id="cash-patients-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                        <i data-lucide="banknote" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 leading-tight">Pazienti Privati Cash</h3>
+                        <p class="text-xs text-slate-500">Ogni paziente ha la sua tariffa</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('cash-patients-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="cash-patients-body" class="space-y-4"></div>
+        </div>
+    </div>
+
     <div id="patients-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-fade-in">
             <div class="flex items-center justify-between mb-4">
@@ -665,7 +703,8 @@
             meta: 'fisioconto_meta_v1',
             cloudUrl: 'fisioconto_cloud_url_v1',
             deviceId: 'fisioconto_device_id_v1',
-            settings: 'fisioconto_settings_v1'
+            settings: 'fisioconto_settings_v1',
+            cashPatients: 'fisioconto_cash_patients_v1'
         };
 
         const DEFAULT_PATIENTS = [
@@ -681,6 +720,8 @@
             dailyLogs: {},
             patients: [...DEFAULT_PATIENTS],
             selectedPrivatePatient: DEFAULT_PATIENTS[0],
+            cashPatients: [],          // Privati Cash: [{ id, name, deleted, rates: [{ from, rate }] }]
+            selectedCashPatient: '',
             payments: [],
             theme: 'light',
             font: 'tecnico',
@@ -756,6 +797,8 @@
                 dailyLogs: state.dailyLogs,
                 patients: state.patients,
                 selectedPrivatePatient: state.selectedPrivatePatient,
+                cashPatients: state.cashPatients,
+                selectedCashPatient: state.selectedCashPatient,
                 payments: state.payments,
                 settings: getSettingsObj()
             };
@@ -774,6 +817,10 @@
                     state.selectedPrivatePatient = state.patients[0];
                 }
             }
+            if (Array.isArray(dataObj.cashPatients)) {
+                state.cashPatients = sanitizeCashPatients(dataObj.cashPatients);
+                if (dataObj.selectedCashPatient) state.selectedCashPatient = dataObj.selectedCashPatient;
+            }
             if (Array.isArray(dataObj.payments)) {
                 state.payments = dataObj.payments;
             }
@@ -788,10 +835,12 @@
                 localStorage.setItem(STORAGE_KEYS.patients, JSON.stringify(state.patients));
                 localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(state.payments));
                 localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(getSettingsObj(true)));
+                localStorage.setItem(STORAGE_KEYS.cashPatients, JSON.stringify(state.cashPatients));
                 localStorage.setItem(STORAGE_KEYS.meta, JSON.stringify({
                     updatedAt: state.updatedAt,
                     deviceId: state.deviceId,
-                    selectedPrivatePatient: state.selectedPrivatePatient
+                    selectedPrivatePatient: state.selectedPrivatePatient,
+                    selectedCashPatient: state.selectedCashPatient
                 }));
             } catch (e) {
                 console.error('Errore scrittura snapshot in localStorage:', e);
@@ -807,10 +856,12 @@
                 localStorage.setItem(STORAGE_KEYS.patients, JSON.stringify(state.patients));
                 localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(state.payments));
                 localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(getSettingsObj(true)));
+                localStorage.setItem(STORAGE_KEYS.cashPatients, JSON.stringify(state.cashPatients));
                 localStorage.setItem(STORAGE_KEYS.meta, JSON.stringify({
                     updatedAt: state.updatedAt,
                     deviceId: state.deviceId,
-                    selectedPrivatePatient: state.selectedPrivatePatient
+                    selectedPrivatePatient: state.selectedPrivatePatient,
+                    selectedCashPatient: state.selectedCashPatient
                 }));
             } catch (e) {
                 console.error('Errore salvataggio locale:', e);
@@ -992,6 +1043,7 @@
                     const meta = JSON.parse(rawMeta);
                     if (meta && meta.updatedAt) state.updatedAt = meta.updatedAt;
                     if (meta && meta.selectedPrivatePatient) state.selectedPrivatePatient = meta.selectedPrivatePatient;
+                    if (meta && meta.selectedCashPatient) state.selectedCashPatient = meta.selectedCashPatient;
                 }
             } catch (e) {
                 console.error('Errore lettura meta:', e);
@@ -1022,6 +1074,15 @@
                 console.error('Errore caricamento patients:', e);
             }
 
+            try {
+                const rawCash = localStorage.getItem(STORAGE_KEYS.cashPatients);
+                if (rawCash) {
+                    const parsed = JSON.parse(rawCash);
+                    if (Array.isArray(parsed)) state.cashPatients = sanitizeCashPatients(parsed);
+                }
+            } catch (e) {
+                console.error('Errore caricamento pazienti cash:', e);
+            }
             try {
                 const rawPayments = localStorage.getItem(STORAGE_KEYS.payments);
                 if (rawPayments) {
@@ -1188,7 +1249,8 @@
 
         function resetCurrentDay() {
             const key = state.selectedDate;
-            const stats = getDayStats(key);
+            const stats0 = getDayStats(key), cash0 = getCashDayStats(key);
+            const stats = { totalCount: stats0.totalCount + cash0.count, totalEuro: stats0.totalEuro + cash0.euro };
 
             if (stats.totalCount === 0) {
                 showToast('Nessun conteggio da azzerare in questo giorno');
@@ -1474,6 +1536,8 @@
                 dailyLogs: state.dailyLogs,
                 patients: state.patients,
                 selectedPrivatePatient: state.selectedPrivatePatient,
+                cashPatients: state.cashPatients,
+                selectedCashPatient: state.selectedCashPatient,
                 payments: state.payments,
                 settings: getSettingsObj()
             };
@@ -1597,10 +1661,11 @@
             indigo: ['#eef2ff', '#c7d2fe', '#312e81', '#4f46e5', '#4338ca', '#a5b4fc'],
             teal:   ['#f0fdfa', '#99f6e4', '#134e4a', '#0d9488', '#0f766e', '#5eead4'],
             pink:   ['#fdf2f8', '#fbcfe8', '#831843', '#db2777', '#be185d', '#f9a8d4'],
-            gray:   ['#f8fafc', '#e2e8f0', '#0f172a', '#475569', '#334155', '#cbd5e1']
+            gray:   ['#f8fafc', '#e2e8f0', '#0f172a', '#475569', '#334155', '#cbd5e1'],
+            black:  ['#f4f4f5', '#d4d4d8', '#09090b', '#000000', '#27272a', '#71717a']
         };
-        const PALETTE_NAMES = { red: 'Rosso', yellow: 'Giallo', brown: 'Marrone', green: 'Verde', blue: 'Blu', indigo: 'Indaco', teal: 'Verde acqua', pink: 'Rosa', gray: 'Grigio' };
-        const CAT_ICONS = ['stethoscope', 'heart-pulse', 'activity', 'syringe', 'pill', 'bandage', 'brain', 'bone', 'hand-heart', 'accessibility', 'baby', 'ambulance', 'hospital', 'home', 'users', 'user-check', 'footprints', 'dumbbell'];
+        const PALETTE_NAMES = { red: 'Rosso', yellow: 'Giallo', brown: 'Marrone', green: 'Verde', blue: 'Blu', indigo: 'Indaco', teal: 'Verde acqua', pink: 'Rosa', gray: 'Grigio', black: 'Nero' };
+        const CAT_ICONS = ['stethoscope', 'heart-pulse', 'activity', 'syringe', 'pill', 'bandage', 'brain', 'bone', 'hand-heart', 'accessibility', 'baby', 'ambulance', 'hospital', 'home', 'users', 'user-check', 'footprints', 'dumbbell', 'banknote', 'wallet', 'coins'];
         const FONTS = {
             classico: ['Classico', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'],
             moderno:  ['Moderno', "'Poppins', sans-serif"],
@@ -1612,7 +1677,8 @@
             { id: 'ambulatorio', name: 'Ambulatorio', color: 'red', mode: 'count', unit: 'seduta', deleted: false, subs: [] },
             { id: 'domiciliari', name: 'Domiciliari', color: 'yellow', mode: 'count', unit: 'accesso', deleted: false,
               subs: [{ id: 'rsa', name: 'RSA aperta', deleted: false }, { id: 'adi', name: 'ADI', deleted: false }] },
-            { id: 'privati', name: 'Privati', color: 'brown', mode: 'patients', unit: 'seduta', deleted: false, subs: [] }
+            { id: 'privati', name: 'Privati', color: 'brown', mode: 'patients', unit: 'seduta', deleted: false, subs: [] },
+            { id: 'cash', name: 'Privati Cash', color: 'black', icon: 'banknote', mode: 'cash', unit: 'seduta', deleted: false, subs: [] }
         ];
 
         (function injectPalettes() {
@@ -1658,7 +1724,7 @@
             const wd = new Date(y, m - 1, d).toLocaleDateString('it-IT', { weekday: 'long' });
             return `${wd} ${formatDateShortIT(isoDate)}`;
         }
-        const visibleCats = ms => state.categories.filter(c => !c.deleted || (ms && ms.byCat[c.id]));
+        const visibleCats = ms => state.categories.filter(c => c.mode !== 'cash' && (!c.deleted || (ms && ms.byCat[c.id])));
 
         // ---- impostazioni salvate (categorie, tariffe, aspetto) ----
         function getSettingsObj(withLook) {
@@ -1672,7 +1738,7 @@
                 id: String(c.id),
                 name: String(c.name || 'Categoria'),
                 color: PALETTES[c.color] ? c.color : 'gray',
-                mode: c.mode === 'patients' ? 'patients' : 'count',
+                mode: c.mode === 'patients' ? 'patients' : (c.mode === 'cash' ? 'cash' : 'count'),
                 unit: String(c.unit || 'prestazione'),
                 deleted: !!c.deleted,
                 purged: !!c.purged,
@@ -1690,6 +1756,7 @@
                 });
             }
             state.categories.forEach(c => {
+                if (c.mode === 'cash') return; // le tariffe cash sono per paziente
                 if (!out[c.id]) out[c.id] = [{ from: '0000-01-01', rate: RATE_DEFAULTS[c.id] || 0 }];
                 (c.subs || []).forEach(s => {
                     const k = c.id + ':' + s.id;
@@ -1710,7 +1777,53 @@
             } else if (!state.categories) {
                 state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
             }
+            // aggiunge "Privati Cash" ai dati salvati prima di questa versione (se non c'e' gia', anche eliminata)
+            if (!state.categories.some(c => c.id === 'cash')) {
+                state.categories.push(JSON.parse(JSON.stringify(DEFAULT_CATEGORIES.find(c => c.id === 'cash'))));
+            }
             state.rateHistory = normalizeRateHistory(st.rateHistory || state.rateHistory);
+        }
+
+        // ---- Privati Cash: pazienti con tariffa propria e storico per data ----
+        function sanitizeCashPatients(arr) {
+            return (Array.isArray(arr) ? arr : []).filter(p => p && p.id).map(p => {
+                let h = (Array.isArray(p.rates) ? p.rates : []).filter(e => e && typeof e.from === 'string' && Number.isFinite(Number(e.rate)))
+                    .map(e => ({ from: e.from, rate: Number(e.rate) }));
+                if (!h.length) h = [{ from: '0000-01-01', rate: 0 }];
+                h.sort((a, b) => (a.from < b.from ? -1 : 1));
+                h[0].from = '0000-01-01';
+                return { id: String(p.id), name: String(p.name || 'Paziente'), deleted: !!p.deleted, rates: h };
+            });
+        }
+        const cashById = id => state.cashPatients.find(p => p.id === id);
+        const activeCash = () => state.cashPatients.filter(p => !p.deleted);
+        function cashRateFor(p, dateKey) {
+            if (!p || !p.rates || !p.rates.length) return 0;
+            let r = p.rates[0].rate;
+            p.rates.forEach(e => { if (e.from <= dateKey) r = e.rate; });
+            return r;
+        }
+        function setCashRate(p, rate, from) {
+            const h = p.rates.filter(e => e.from !== from);
+            h.push({ from, rate: Math.round(rate * 100) / 100 });
+            h.sort((a, b) => (a.from < b.from ? -1 : 1));
+            h[0].from = '0000-01-01';
+            p.rates = h;
+        }
+        // totale cash di un giorno: ogni seduta vale la tariffa che il paziente aveva IN QUELLA DATA
+        function getCashDayStats(dateKey) {
+            const rec = getDayRecord(dateKey);
+            const byPatient = {};
+            let count = 0, euro = 0;
+            Object.entries(rec.cash || {}).forEach(([id, v]) => {
+                const n = Math.max(0, Number(v) || 0);
+                if (!n) return;
+                const p = cashById(id);
+                const e = n * (p ? cashRateFor(p, dateKey) : 0);
+                byPatient[id] = { name: p ? p.name : 'Paziente', count: n, euro: e };
+                count += n; euro += e;
+            });
+            return { count, euro, byPatient };
         }
 
         function rateFor(key, dateKey) {
@@ -1734,6 +1847,7 @@
                 }
             });
             if (!rec.privati || typeof rec.privati !== 'object') rec.privati = {};
+            if (!rec.cash || typeof rec.cash !== 'object') rec.cash = {};
         }
 
         function migrateData() {
@@ -1748,7 +1862,7 @@
 
         function getDayRecord(dateKey) {
             if (!state.dailyLogs[dateKey] || typeof state.dailyLogs[dateKey] !== 'object') {
-                state.dailyLogs[dateKey] = { counts: {}, privati: {} };
+                state.dailyLogs[dateKey] = { counts: {}, privati: {}, cash: {} };
             }
             const rec = state.dailyLogs[dateKey];
             migrateRec(rec);
@@ -1833,11 +1947,72 @@
         function catIconOf(c) {
             if (c.icon) return c.icon;
             if (c.mode === 'patients') return 'user-check';
+            if (c.mode === 'cash') return 'banknote';
             if (activeSubs(c).length) return 'home';
             return c.id === 'ambulatorio' ? 'stethoscope' : 'activity';
         }
 
+        function renderCashCard(c, rec) {
+            const cs = getCashDayStats(state.selectedDate);
+            const list = activeCash();
+            if (!list.some(p => p.id === state.selectedCashPatient)) state.selectedCashPatient = list[0] ? list[0].id : '';
+            const ap = cashById(state.selectedCashPatient);
+            const apCount = ap ? (Number((rec.cash || {})[ap.id]) || 0) : 0;
+            const rateTxt = ap ? `${cashRateFor(ap, state.selectedDate)} € / ${escapeHTML(c.unit)}` : 'Aggiungi un paziente';
+            const chips = Object.values(cs.byPatient).map(v =>
+                `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg pc-soft text-xs font-semibold">${escapeHTML(v.name)}<span class="px-1.5 rounded-md pc-btn text-[11px]">${v.count}</span></span>`).join('')
+                || `<span class="text-xs text-slate-400">Nessun paziente</span>`;
+            return `<div class="pal-${c.color} bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between"><div>
+                <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-9 h-9 rounded-xl pc-ico flex items-center justify-center shrink-0"><i data-lucide="${catIconOf(c)}" class="w-5 h-5"></i></div>
+                        <div class="min-w-0">
+                            <h3 class="text-base font-bold text-slate-900 leading-tight truncate">${escapeHTML(c.name)}</h3>
+                            <span class="text-xs font-semibold pc-mid tabular-nums">${rateTxt}</span>
+                        </div>
+                    </div>
+                    <span class="text-base font-extrabold text-slate-900 tabular-nums">${fc(cs.euro)}</span>
+                </div>
+                <div class="mt-3.5 flex items-center gap-2">
+                    <select id="cash-patient-select" onchange="onCashPatientSelectChange(event)"
+                        class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 cursor-pointer">
+                        ${list.length ? list.map(p => `<option value="${escapeHTML(p.id)}" ${ap && p.id === ap.id ? 'selected' : ''}>${escapeHTML(p.name)}</option>`).join('') : '<option value="">Nessun paziente</option>'}
+                    </select>
+                    <button type="button" onclick="openCashPatientsModal()" class="px-3 py-2 rounded-xl pc-soft text-xs font-bold cursor-pointer shrink-0">+ Nuovo / Gestisci</button>
+                </div>
+                <div class="flex items-center justify-between gap-3 my-4">
+                    <button type="button" onclick="updateCashPatientCount(-1)" aria-label="Riduci" class="w-11 h-11 ${BTN_MINUS}"><i data-lucide="minus" class="w-5 h-5"></i></button>
+                    <div class="text-center">
+                        <span class="text-2xl font-extrabold text-slate-900 tabular-nums block leading-none">${apCount}</span>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1 block truncate max-w-[140px]">${ap ? escapeHTML(ap.name) : '—'}</span>
+                    </div>
+                    <button type="button" onclick="updateCashPatientCount(1)" aria-label="Aumenta" class="w-11 h-11 ${BTN_PLUS}"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                </div>
+                <div class="pt-2 border-t border-slate-100">
+                    <span class="text-[11px] font-semibold text-slate-500 block mb-1.5">Pazienti trattati oggi (${cs.count})</span>
+                    <div class="flex flex-wrap gap-1.5">${chips}</div>
+                </div>
+            </div></div>`;
+        }
+
+        function onCashPatientSelectChange(e) {
+            state.selectedCashPatient = e.target.value;
+            persistChanges({ syncCloud: false, immediateCloud: false });
+            renderWorkView();
+        }
+
+        function updateCashPatientCount(delta) {
+            const p = cashById(state.selectedCashPatient);
+            if (!p || p.deleted) { showToast('Aggiungi prima un paziente cash'); return; }
+            const rec = getDayRecord(state.selectedDate);
+            const next = Math.max(0, (Number(rec.cash[p.id]) || 0) + delta);
+            if (next === 0) delete rec.cash[p.id]; else rec.cash[p.id] = next;
+            persistChanges();
+            renderWorkView();
+        }
+
         function renderCategoryCard(c, ds, rec) {
+            if (c.mode === 'cash') return renderCashCard(c, rec);
             const subs = activeSubs(c);
             const b = ds.byCat[c.id] || { count: 0, euro: 0, subs: {} };
             const rateTxt = (c.mode === 'patients' || !subs.length) ? `${rateFor(c.id, state.selectedDate)} € / ${escapeHTML(c.unit)}` : '';
@@ -2094,7 +2269,7 @@
         // ---- incassi ----
         let payMonthPrefix = null;
         const activeCatOptions = (selected, includeId) => state.categories
-            .filter(c => !c.deleted || c.id === includeId)
+            .filter(c => c.mode !== 'cash' && (!c.deleted || c.id === includeId))
             .map(c => `<option value="${c.id}" ${c.id === selected ? 'selected' : ''}>${escapeHTML(c.name)}</option>`).join('');
 
         function openQuickPaymentModal(presetKey) {
@@ -2102,7 +2277,7 @@
             payMonthPrefix = prefix;
             const ms = getMonthStats(prefix);
             let opts = `<option value="month">Totale mese (${fc(ms.totalEuro)})</option>` +
-                state.categories.filter(c => !c.deleted).map(c => `<option value="cat:${c.id}">${escapeHTML(c.name)} mese (${fc((ms.byCat[c.id] || {}).euro || 0)})</option>`).join('');
+                state.categories.filter(c => !c.deleted && c.mode !== 'cash').map(c => `<option value="cat:${c.id}">${escapeHTML(c.name)} mese (${fc((ms.byCat[c.id] || {}).euro || 0)})</option>`).join('');
             const pats = Object.keys(ms.privateByPatient);
             if (pats.length) {
                 opts += `<optgroup label="Paziente Privato del Mese">` + pats.map(pn =>
@@ -2255,7 +2430,7 @@
                             <button type="button" onclick="deleteCat('${c.id}')" class="${IC_BTN}" title="Elimina"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </span>
                     </div>
-                    ${c.mode === 'patients' ? '' : `<div class="mt-1.5 space-y-0.5">${activeSubs(c).map(s => subRow(c, s)).join('')}
+                    ${(c.mode === 'patients' || c.mode === 'cash') ? '' : `<div class="mt-1.5 space-y-0.5">${activeSubs(c).map(s => subRow(c, s)).join('')}
                         <button type="button" onclick="openCatForm('sub',null,'${c.id}')" class="ml-5 mt-1 text-[11px] font-bold pc-mid cursor-pointer">+ Sottocategoria</button></div>`}
                 </div>`).join('');
             html += `<button type="button" onclick="openCatForm('cat',null)" class="w-full px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-bold cursor-pointer">+ Nuova categoria</button>`;
@@ -2401,7 +2576,7 @@
                     </div>
                     <ul class="mt-2 text-[11px] text-slate-500 space-y-0.5">${(state.rateHistory[key] || []).map(e => `<li>${e.from === '0000-01-01' ? 'Iniziale' : 'dal ' + formatDateShortIT(e.from)}: <b>${fc(e.rate)}</b></li>`).join('')}</ul>
                 </div>`;
-            document.getElementById('rates-body').innerHTML = state.categories.filter(c => !c.deleted).map(c => {
+            document.getElementById('rates-body').innerHTML = state.categories.filter(c => !c.deleted && c.mode !== 'cash').map(c => {
                 const subs = c.mode === 'patients' ? [] : activeSubs(c);
                 return `<div class="pal-${c.color} space-y-2">
                     <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full pc-dot"></span><h4 class="text-xs font-bold uppercase tracking-wide text-slate-600">${escapeHTML(c.name)}</h4></div>
@@ -2427,6 +2602,181 @@
         }
 
 
+        // ---- Privati Cash: gestione pazienti e tariffe ----
+        let cashEditId = null;
+        const CASH_INP = 'bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl p-2.5 focus:ring-indigo-500 focus:border-indigo-500';
+
+        function openCashPatientsModal() {
+            const list = activeCash();
+            cashEditId = (cashById(state.selectedCashPatient) && !cashById(state.selectedCashPatient).deleted) ? state.selectedCashPatient : (list[0] ? list[0].id : null);
+            renderCashModal();
+            document.getElementById('cash-patients-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function renderCashModal() {
+            const list = activeCash();
+            const p = cashEditId ? cashById(cashEditId) : null;
+            const today = getTodayISO();
+            let html = `
+                <form onsubmit="handleAddCashPatient(event)">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1" for="cash-new-name">Nuovo paziente e tariffa</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="cash-new-name" placeholder="Nome paziente..." required class="flex-1 min-w-0 ${CASH_INP}">
+                        <input type="number" id="cash-new-rate" step="0.01" min="0" inputmode="decimal" placeholder="€" required aria-label="Tariffa" class="w-24 ${CASH_INP} tabular-nums">
+                        <button type="submit" class="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold cursor-pointer shrink-0">Aggiungi</button>
+                    </div>
+                </form>`;
+            if (p && !p.deleted) {
+                html += `
+                <div class="pt-3 border-t border-slate-100 space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1" for="cash-edit-select">Modifica paziente</label>
+                        <select id="cash-edit-select" onchange="onCashEditSelect(this.value)" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm font-medium rounded-xl p-2.5 cursor-pointer">
+                            ${list.map(x => `<option value="${escapeHTML(x.id)}" ${x.id === p.id ? 'selected' : ''}>${escapeHTML(x.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1" for="cash-edit-name">Nome</label>
+                        <input type="text" id="cash-edit-name" value="${escapeHTML(p.name)}" maxlength="40" class="w-full ${CASH_INP}">
+                    </div>
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1" for="cash-edit-rate">Tariffa (€)</label>
+                            <input type="number" id="cash-edit-rate" step="0.01" min="0" inputmode="decimal" value="${cashRateFor(p, today)}" class="w-24 ${CASH_INP} tabular-nums">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1" for="cash-edit-from">Valida dal</label>
+                            <input type="date" id="cash-edit-from" value="${today}" class="${CASH_INP}">
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500">Se cambi la tariffa, vale solo dalla data indicata: sedute e totali precedenti restano invariati.</p>
+                    <ul class="text-[11px] text-slate-500 space-y-0.5">${p.rates.map(e => `<li>${e.from === '0000-01-01' ? 'Iniziale' : 'dal ' + formatDateShortIT(e.from)}: <b>${fc(e.rate)}</b></li>`).join('')}</ul>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="handleSaveCashPatient()" class="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold cursor-pointer">Salva modifiche</button>
+                        <button type="button" onclick="handleRemoveCashPatient()" class="px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-semibold cursor-pointer shrink-0">Rimuovi</button>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('cash-patients-body').innerHTML = html;
+        }
+
+        function onCashEditSelect(id) { cashEditId = id; renderCashModal(); }
+
+        function handleAddCashPatient(e) {
+            e.preventDefault();
+            const name = document.getElementById('cash-new-name').value.trim();
+            const rate = parseFloat(String(document.getElementById('cash-new-rate').value).replace(',', '.'));
+            if (!name) return;
+            if (!Number.isFinite(rate) || rate < 0) { showToast('Tariffa non valida'); return; }
+            if (activeCash().some(p => p.name.toLowerCase() === name.toLowerCase())) { showToast('Esiste già un paziente con questo nome'); return; }
+            // se esiste un paziente rimosso con lo stesso nome lo riattiva: lo storico resta suo
+            let p = state.cashPatients.find(x => x.deleted && x.name.toLowerCase() === name.toLowerCase());
+            if (p) {
+                p.deleted = false;
+                if (Math.abs(rate - cashRateFor(p, getTodayISO())) > 0.004) setCashRate(p, rate, getTodayISO());
+            } else {
+                p = { id: 'cp' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name, deleted: false, rates: [{ from: '0000-01-01', rate: Math.round(rate * 100) / 100 }] };
+                state.cashPatients.push(p);
+            }
+            state.selectedCashPatient = p.id;
+            persistChanges();
+            closeModal('cash-patients-modal');
+            renderWorkView();
+            showToast(`Aggiunto e selezionato: ${name}`);
+        }
+
+        function handleSaveCashPatient() {
+            const p = cashById(cashEditId);
+            if (!p) return;
+            const name = document.getElementById('cash-edit-name').value.trim();
+            const rate = parseFloat(String(document.getElementById('cash-edit-rate').value).replace(',', '.'));
+            const from = document.getElementById('cash-edit-from').value || getTodayISO();
+            if (!name) return;
+            if (!Number.isFinite(rate) || rate < 0) { showToast('Tariffa non valida'); return; }
+            if (activeCash().some(x => x.id !== p.id && x.name.toLowerCase() === name.toLowerCase())) { showToast('Esiste già un paziente con questo nome'); return; }
+            p.name = name;
+            if (Math.abs(rate - cashRateFor(p, from)) > 0.004) setCashRate(p, rate, from);
+            state.selectedCashPatient = p.id;
+            persistChanges();
+            closeModal('cash-patients-modal');
+            renderWorkView();
+            renderPayments();
+            showToast('Paziente cash salvato');
+        }
+
+        function handleRemoveCashPatient() {
+            const p = cashById(cashEditId);
+            if (!p || !confirm(`Rimuovere "${p.name}" dal menù?\n\nSedute, totali e tariffe già registrati restano invariati.`)) return;
+            p.deleted = true;
+            const list = activeCash();
+            if (state.selectedCashPatient === p.id) state.selectedCashPatient = list[0] ? list[0].id : '';
+            persistChanges();
+            closeModal('cash-patients-modal');
+            renderWorkView();
+            renderPayments();
+            showToast(`Rimosso dal menù: ${p.name}`);
+        }
+
+        // ---- Totale Privati Cash (schermata incassi, gruppo 2: separato dal gruppo 1) ----
+        function cashPeriodStats() {
+            const { year, month } = periodPayments();
+            const byPatient = {};
+            let total = 0, count = 0;
+            Object.keys(state.dailyLogs).sort().forEach(dk => {
+                if (!dk.startsWith(year + '-')) return;
+                if (month !== 'all' && dk.slice(5, 7) !== month) return;
+                const cs = getCashDayStats(dk);
+                Object.entries(cs.byPatient).forEach(([id, v]) => {
+                    const b = byPatient[id] || (byPatient[id] = { name: v.name, count: 0, euro: 0, days: [] });
+                    b.count += v.count; b.euro += v.euro; b.days.push({ date: dk, count: v.count, euro: v.euro });
+                });
+                total += cs.euro; count += cs.count;
+            });
+            return { year, month, total, count, byPatient };
+        }
+
+        function renderCashBox() {
+            const box = document.getElementById('cash-box');
+            if (!box) return;
+            const c = catById('cash');
+            const st = cashPeriodStats();
+            box.classList.toggle('hidden', !!(c ? c.deleted : true) && st.total === 0 && st.count === 0);
+            const name = c ? c.name : 'Privati Cash';
+            document.getElementById('cash-box-title').textContent = name;
+            document.getElementById('cash-box-label').textContent = 'Totale ' + name;
+            document.getElementById('cash-box-period').textContent = st.month === 'all' ? `Anno ${st.year}` : `${getMonthNameIT(st.month)} ${st.year}`;
+            document.getElementById('kpi-cash-total').textContent = fc(st.total);
+            document.getElementById('kpi-cash-count').textContent = `${st.count} ${st.count === 1 ? 'seduta' : 'sedute'}`;
+            const color = c ? c.color : 'black';
+            const rows = Object.entries(st.byPatient).sort((a, b) => a[1].name.localeCompare(b[1].name, 'it')).map(([id, v]) => `
+                <button type="button" onclick="openCashPatientDetail('${escapeAttr(id)}')"
+                    class="pal-${color} pc-soft w-full flex items-center justify-between gap-2 p-2.5 rounded-xl transition-opacity hover:opacity-85 cursor-pointer text-left">
+                    <div class="min-w-0">
+                        <span class="font-bold block truncate">${escapeHTML(v.name)}</span>
+                        <span class="text-xs pc-mid tabular-nums">${v.count} ${v.count === 1 ? 'seduta' : 'sedute'}</span>
+                    </div>
+                    <span class="flex items-center gap-1.5 shrink-0">
+                        <span class="font-extrabold text-sm tabular-nums">${fc(v.euro)}</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
+                    </span>
+                </button>`).join('');
+            document.getElementById('kpi-cash-rows').innerHTML = rows || `<p class="text-xs text-slate-500">Nessuna seduta cash in questo periodo.</p>`;
+        }
+
+        function openCashPatientDetail(id) {
+            const st = cashPeriodStats();
+            const v = st.byPatient[id];
+            const period = st.month === 'all' ? `Anno ${st.year}` : `${getMonthNameIT(st.month)} ${st.year}`;
+            if (!v) { openInfoModal('Privati Cash', period, `<p class="text-center py-8 text-slate-500 text-sm">Nessuna seduta in questo periodo.</p>`); return; }
+            const html = v.days.slice().sort((a, b) => b.date.localeCompare(a.date)).map(d => `
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+                    <span class="font-semibold text-slate-800">${formatWeekdayDMY(d.date)}</span>
+                    <span class="font-bold text-slate-900 tabular-nums">${d.count} ${d.count === 1 ? 'seduta' : 'sedute'} · ${fc(d.euro)}</span>
+                </div>`).join('');
+            openInfoModal(v.name, `${period} · Totale ${fc(v.euro)} · ${v.count} ${v.count === 1 ? 'seduta' : 'sedute'}`, html);
+        }
+
         // ---- schermata incassi: riquadro con totali per categoria cliccabili ----
         let reportCat = null;
 
@@ -2451,9 +2801,10 @@
                         <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
                     </span>
                 </button>`;
-            let html = state.categories.filter(c => !c.deleted || sums[c.id]).map(c => row(c.id, c.color, c.name, sums[c.id] || 0)).join('');
+            let html = state.categories.filter(c => c.mode !== 'cash' && (!c.deleted || sums[c.id])).map(c => row(c.id, c.color, c.name, sums[c.id] || 0)).join('');
             if (sums['?']) html += row('?', 'gray', 'Altro', sums['?']);
             document.getElementById('kpi-cats').innerHTML = html;
+            renderCashBox();
             lucide.createIcons();
         }
 
@@ -2590,7 +2941,7 @@
             if (!el) return;
             const { slots, title } = chartData();
             if (chartSel !== null && !slots[chartSel]) chartSel = null;
-            const cats = state.categories.filter(c => !c.deleted || slots.some(s => s.byCat[c.id]));
+            const cats = state.categories.filter(c => c.mode !== 'cash' && (!c.deleted || slots.some(s => s.byCat[c.id])));
             const max = Math.max(0, ...slots.map(s => s.total));
             const step = niceStep((max || 40) / 4);
             const top = Math.max(step, Math.ceil(max / step) * step);
