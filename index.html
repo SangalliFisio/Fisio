@@ -90,12 +90,17 @@
                 <nav class="flex justify-self-center bg-slate-100 p-1 rounded-xl border border-slate-200/80" aria-label="Sezioni principali">
                     <button id="tab-work" type="button" onclick="switchTab('work')"
                         class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-teal-700 shadow-xs cursor-pointer">
-                        <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                        <i data-lucide="clipboard-list" class="w-4 h-4 hidden sm:block"></i>
                         <span class="sm:hidden">Lavoro</span><span class="hidden sm:inline">Conteggio Lavoro</span>
+                    </button>
+                    <button id="tab-report" type="button" onclick="switchTab('report')"
+                        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <i data-lucide="chart-column" class="w-4 h-4 hidden sm:block"></i>
+                        <span>Report</span>
                     </button>
                     <button id="tab-payments" type="button" onclick="switchTab('payments')"
                         class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
-                        <i data-lucide="wallet" class="w-4 h-4"></i>
+                        <i data-lucide="wallet" class="w-4 h-4 hidden sm:block"></i>
                         <span class="sm:hidden">Incassi</span><span class="hidden sm:inline">Registro Incassi</span>
                     </button>
                 </nav>
@@ -105,6 +110,20 @@
                 class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
                 <i data-lucide="settings" class="w-5 h-5"></i>
             </button>
+        </div>
+        <!-- Barra data: fa parte dell'intestazione (un unico blocco bloccato in alto) -->
+        <div id="date-bar" class="max-w-5xl mx-auto px-4 pt-2">
+            <div class="flex flex-col items-center gap-1">
+                <div class="flex items-center justify-center gap-1.5 sm:gap-2">
+                    <button type="button" onclick="changeSelectedDate(-1)" title="Giorno precedente" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <input type="date" id="work-date-input" onchange="onDateInputChange(event)"
+                        class="bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 tabular-nums cursor-pointer">
+                    <button type="button" onclick="changeSelectedDate(1)" title="Giorno successivo" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    <button type="button" onclick="goToToday()"
+                        class="px-3 py-2 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-colors cursor-pointer shrink-0">Oggi</button>
+                </div>
+                <span id="selected-date-label" class="text-xs sm:text-sm font-semibold text-slate-600 block text-center"></span>
+            </div>
         </div>
     </header>
 
@@ -128,40 +147,6 @@
         <!-- ========================================== -->
         <section id="view-work" class="space-y-5">
 
-            <!-- Barra Navigazione Date: bloccata in alto, sotto l'intestazione -->
-            <div id="date-bar-wrap" class="sticky z-20 -mx-4 px-4 pt-1 pb-2 bg-slate-50" style="top: var(--header-h, 4rem)">
-                <div class="bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-3 shadow-sm">
-                    <div class="flex flex-col items-center gap-1.5">
-                        <div class="flex items-center justify-center gap-1.5 sm:gap-2">
-                            <button type="button" onclick="changeSelectedDate(-1)" title="Giorno precedente"
-                                class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                            </button>
-
-                            <input type="date" id="work-date-input" onchange="onDateInputChange(event)"
-                                class="bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-xl px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 tabular-nums cursor-pointer">
-
-                            <button type="button" onclick="changeSelectedDate(1)" title="Giorno successivo"
-                                class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                            </button>
-
-                            <button type="button" onclick="goToToday()"
-                                class="px-3 py-2 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-colors cursor-pointer shrink-0">
-                                Oggi
-                            </button>
-                        </div>
-
-                        <span id="selected-date-label" class="text-xs sm:text-sm font-semibold text-slate-600 capitalize block text-center"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Riepilogo Mensile -->
-            <div id="month-summary-card" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
-                <!-- Popolato dinamicamente da JS -->
-            </div>
-
             <!-- Griglia delle 3 Tipologie di Lavoro -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="services-container">
                 <!-- Popolato dinamicamente da JS -->
@@ -181,6 +166,13 @@
         <!-- ========================================== -->
         <!-- 3. SCHEDA REGISTRO INCASSI                 -->
         <!-- ========================================== -->
+        <section id="view-report" class="hidden space-y-5">
+            <!-- Riepilogo del mese -->
+            <div id="month-summary-card" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between"></div>
+            <!-- Grafico maturato per categoria -->
+            <div id="report-chart-card" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs"></div>
+        </section>
+
         <section id="view-payments" class="hidden space-y-5">
 
             <!-- Riepilogo Incassi (stesso stile del riepilogo mensile) -->
@@ -1115,28 +1107,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function switchTab(tab) {
-            const workView = document.getElementById('view-work');
-            const paymentsView = document.getElementById('view-payments');
-            const tabWork = document.getElementById('tab-work');
-            const tabPayments = document.getElementById('tab-payments');
-
-            if (tab === 'work') {
-                workView.classList.remove('hidden');
-                paymentsView.classList.add('hidden');
-                tabWork.className = 'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-teal-700 shadow-xs cursor-pointer';
-                tabPayments.className = 'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer';
-                renderWorkView();
-            } else {
-                workView.classList.add('hidden');
-                paymentsView.classList.remove('hidden');
-                tabPayments.className = 'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-teal-700 shadow-xs cursor-pointer';
-                tabWork.className = 'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer';
-                populateYearFilter();
-                renderPayments();
-            }
-            lucide.createIcons();
-        }
 
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
@@ -1204,7 +1174,7 @@
             closeModal('month-detail-modal');
             closeModal('category-detail-modal');
             closeModal('patient-detail-modal');
-            renderWorkView();
+            switchTab('work');
         }
 
         function resetCurrentDay() {
@@ -1916,47 +1886,6 @@
             if (dateInput) dateInput.value = state.selectedDate;
             if (dateLabel) dateLabel.textContent = formatDateExtendedIT(state.selectedDate);
 
-            const prefix = state.selectedDate.slice(0, 7);
-            const ms = getMonthStats(prefix);
-            const navBtn = 'w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0';
-
-            const rows = visibleCats(ms).map(c => {
-                const b = ms.byCat[c.id] || { count: 0, euro: 0, subs: {} };
-                const np = Object.keys(ms.privateByPatient).length;
-                const title = c.mode === 'patients' ? `${c.name} (${np} ${np === 1 ? 'paziente' : 'pazienti'})` : c.name;
-                return `
-                    <button type="button" onclick="openCategoryDetailModal('${c.id}')"
-                        class="pal-${c.color} pc-soft w-full flex items-center justify-between gap-2 p-2.5 rounded-xl transition-opacity hover:opacity-85 cursor-pointer text-left">
-                        <div class="min-w-0">
-                            <span class="font-bold block truncate">${escapeHTML(title)}</span>
-                        </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <span class="font-extrabold text-sm tabular-nums">${fc(b.euro)}</span>
-                            <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
-                        </div>
-                    </button>`;
-            }).join('');
-
-            const monthCard = document.getElementById('month-summary-card');
-            if (monthCard) {
-                monthCard.innerHTML = `
-                    <div class="flex items-center justify-center gap-3 pb-3.5 border-b border-slate-100">
-                        <button type="button" onclick="changeSelectedMonth(-1)" title="Mese precedente" class="${navBtn}"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                        <h2 class="text-base sm:text-lg font-extrabold text-slate-900 min-w-[150px] text-center tabular-nums">${escapeHTML(getMonthLabelIT(prefix))}</h2>
-                        <button type="button" onclick="changeSelectedMonth(1)" title="Mese successivo" class="${navBtn}"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                    </div>
-
-                    <div class="mt-3.5 flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                        <span class="text-xs font-medium text-slate-500">Totale maturato nel mese</span>
-                        <span class="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums">${fc(ms.totalEuro)}</span>
-                    </div>
-
-                    <button type="button" onclick="openMonthSummaryModal()"
-                        class="mt-3 w-full py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold text-center transition-all cursor-pointer">Dettaglio mese</button>
-
-                    <div class="mt-3 space-y-2 text-xs">${rows}</div>`;
-            }
-
             const ds = getDayStats(state.selectedDate);
             const rec = getDayRecord(state.selectedDate);
             const cont = document.getElementById('services-container');
@@ -1964,6 +1893,7 @@
                 cont.innerHTML = state.categories.filter(c => !c.deleted).map(c => renderCategoryCard(c, ds, rec)).join('')
                     || `<p class="col-span-full text-center text-sm text-slate-500 py-6">Nessuna categoria attiva: creane una dalle impostazioni.</p>`;
             }
+            renderReport();
             lucide.createIcons();
         }
 
@@ -2499,6 +2429,174 @@
 
         function confirmDeletePayment(id) {
             if (confirm('Eliminare questo incasso?')) deletePayment(id);
+        }
+
+
+        // ==========================================
+        // NAVIGAZIONE, REPORT (RIEPILOGO MESE + GRAFICO)
+        // ==========================================
+        function switchTab(tab) {
+            const on = 'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-teal-700 shadow-xs cursor-pointer';
+            const off = 'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer';
+            ['work', 'report', 'payments'].forEach(k => {
+                document.getElementById('view-' + k).classList.toggle('hidden', k !== tab);
+                document.getElementById('tab-' + k).className = k === tab ? on : off;
+            });
+            document.getElementById('date-bar').classList.toggle('hidden', tab !== 'work');
+            if (tab === 'payments') { populateYearFilter(); renderPayments(); }
+            else renderWorkView();
+            lucide.createIcons();
+        }
+
+        function renderMonthSummary() {
+            const prefix = state.selectedDate.slice(0, 7);
+            const ms = getMonthStats(prefix);
+            const navBtn = 'w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0';
+
+            const rows = visibleCats(ms).map(c => {
+                const b = ms.byCat[c.id] || { count: 0, euro: 0, subs: {} };
+                const np = Object.keys(ms.privateByPatient).length;
+                const title = c.mode === 'patients' ? `${c.name} (${np} ${np === 1 ? 'paziente' : 'pazienti'})` : c.name;
+                return `
+                    <button type="button" onclick="openCategoryDetailModal('${c.id}')"
+                        class="pal-${c.color} pc-soft w-full flex items-center justify-between gap-2 p-2.5 rounded-xl transition-opacity hover:opacity-85 cursor-pointer text-left">
+                        <div class="min-w-0">
+                            <span class="font-bold block truncate">${escapeHTML(title)}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="font-extrabold text-sm tabular-nums">${fc(b.euro)}</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
+                        </div>
+                    </button>`;
+            }).join('');
+
+            const monthCard = document.getElementById('month-summary-card');
+            if (monthCard) {
+                monthCard.innerHTML = `
+                    <div class="flex items-center justify-center gap-3 pb-3.5 border-b border-slate-100">
+                        <button type="button" onclick="changeSelectedMonth(-1)" title="Mese precedente" class="${navBtn}"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <h2 class="text-base sm:text-lg font-extrabold text-slate-900 min-w-[150px] text-center tabular-nums">${escapeHTML(getMonthLabelIT(prefix))}</h2>
+                        <button type="button" onclick="changeSelectedMonth(1)" title="Mese successivo" class="${navBtn}"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+
+                    <div class="mt-3.5 flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                        <span class="text-xs font-medium text-slate-500">Totale maturato nel mese</span>
+                        <span class="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums">${fc(ms.totalEuro)}</span>
+                    </div>
+
+                    <button type="button" onclick="openMonthSummaryModal()"
+                        class="mt-3 w-full py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold text-center transition-all cursor-pointer">Dettaglio mese</button>
+
+                    <div class="mt-3 space-y-2 text-xs">${rows}</div>`;
+            }
+        }
+
+        function renderReport() {
+            if (document.getElementById('view-report').classList.contains('hidden')) return;
+            renderMonthSummary();
+            renderChart();
+            lucide.createIcons();
+        }
+
+        let chartMode = 'week', chartAnchor = null, chartSel = null;
+        const DOW_IT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+        const CH_NAV = 'w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0';
+        const isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        function isoAdd(iso, n) { const [y, m, d] = iso.split('-').map(Number); return isoOf(new Date(y, m - 1, d + n)); }
+        function weekStartISO(iso) { const [y, m, d] = iso.split('-').map(Number); return isoAdd(iso, -((new Date(y, m - 1, d).getDay() + 6) % 7)); }
+        function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x))); const n = x / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+
+        function chartData() {
+            if (!chartAnchor) chartAnchor = getTodayISO();
+            const slots = [];
+            let title;
+            if (chartMode === 'week') {
+                const start = weekStartISO(chartAnchor);
+                for (let i = 0; i < 7; i++) {
+                    const iso = isoAdd(start, i);
+                    const ds = state.dailyLogs[iso] ? getDayStats(iso) : { byCat: {}, totalEuro: 0 };
+                    slots.push({ label: DOW_IT[i], sub: iso.slice(8), full: formatDateExtendedIT(iso), byCat: ds.byCat, total: ds.totalEuro });
+                }
+                title = `${formatDateShortIT(start)} – ${formatDateShortIT(isoAdd(start, 6))}`;
+            } else {
+                const year = chartAnchor.slice(0, 4);
+                for (let m = 1; m <= 12; m++) {
+                    const mm = String(m).padStart(2, '0');
+                    const ms = getMonthStats(`${year}-${mm}`);
+                    slots.push({ label: getMonthNameIT(mm).slice(0, 3), sub: '', full: getMonthLabelIT(`${year}-${mm}`), byCat: ms.byCat, total: ms.totalEuro });
+                }
+                title = year;
+            }
+            return { slots, title };
+        }
+
+        function renderChart() {
+            const el = document.getElementById('report-chart-card');
+            if (!el) return;
+            const { slots, title } = chartData();
+            if (chartSel !== null && !slots[chartSel]) chartSel = null;
+            const cats = state.categories.filter(c => !c.deleted || slots.some(s => s.byCat[c.id]));
+            const max = Math.max(0, ...slots.map(s => s.total));
+            const step = niceStep((max || 40) / 4);
+            const top = Math.max(step, Math.ceil(max / step) * step);
+            const W = 340, H = 200, L = 36, R = 6, T = 16, B = 32;
+            const pw = W - L - R, ph = H - T - B, sw = pw / slots.length, bw = Math.min(sw * 0.62, 30);
+            const yOf = v => T + ph - (v / top) * ph;
+            let g = '';
+            for (let v = 0; v <= top + 0.001; v += step) {
+                g += `<line x1="${L}" x2="${W - R}" y1="${yOf(v)}" y2="${yOf(v)}" stroke="currentColor" stroke-opacity=".15"/><text x="${L - 4}" y="${yOf(v) + 3}" text-anchor="end" font-size="8" fill="currentColor">${Math.round(v * 100) / 100}</text>`;
+            }
+            slots.forEach((s, i) => {
+                const x = L + i * sw + (sw - bw) / 2;
+                let y = yOf(0);
+                cats.forEach(c => {
+                    const val = (s.byCat[c.id] || {}).euro || 0;
+                    if (val <= 0) return;
+                    const h = (val / top) * ph;
+                    y -= h;
+                    g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${PALETTES[c.color][3]}"/>`;
+                });
+                if (s.total > 0) g += `<text x="${x + bw / 2}" y="${y - 3}" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor">${Math.round(s.total)}</text>`;
+                g += `<text x="${x + bw / 2}" y="${H - B + 12}" text-anchor="middle" font-size="9" font-weight="600" fill="currentColor">${s.label}</text>`;
+                if (s.sub) g += `<text x="${x + bw / 2}" y="${H - B + 23}" text-anchor="middle" font-size="8" fill="currentColor" fill-opacity=".7">${s.sub}</text>`;
+                if (chartSel === i) g += `<rect x="${L + i * sw + 1}" y="${T}" width="${sw - 2}" height="${ph}" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-dasharray="3 2" rx="3"/>`;
+                g += `<rect x="${L + i * sw}" y="${T}" width="${sw}" height="${H - T}" fill="transparent" style="cursor:pointer" onclick="selectChartBar(${i})"/>`;
+            });
+
+            const totals = {};
+            slots.forEach(s => Object.entries(s.byCat).forEach(([id, b]) => { totals[id] = (totals[id] || 0) + b.euro; }));
+            const periodTotal = slots.reduce((a, s) => a + s.total, 0);
+            const legend = cats.map(c => `<span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700"><span class="w-2.5 h-2.5 rounded-sm" style="background:${PALETTES[c.color][3]}"></span>${escapeHTML(c.name)} <span class="text-slate-500 tabular-nums">${fc(totals[c.id] || 0)}</span></span>`).join('');
+            const sel = chartSel !== null ? slots[chartSel] : null;
+            const detail = sel
+                ? `<span class="font-bold text-slate-900">${escapeHTML(sel.full)}</span> · ${fc(sel.total)}` +
+                  cats.filter(c => (sel.byCat[c.id] || {}).euro > 0).map(c => `<br>${escapeHTML(c.name)} ${fc(sel.byCat[c.id].euro)}`).join('')
+                : 'Tocca una colonna per vedere il dettaglio';
+            const tog = (m, label) => `<button type="button" onclick="setChartMode('${m}')" class="px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${chartMode === m ? 'bg-white text-teal-700 shadow-xs' : 'text-slate-600'}">${label}</button>`;
+            el.innerHTML = `
+                <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                    <h2 class="text-base font-extrabold text-slate-900">Maturato per categoria</h2>
+                    <div class="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/80">${tog('week', 'Settimana')}${tog('year', 'Anno')}</div>
+                </div>
+                <div class="mt-3 flex items-center justify-center gap-3">
+                    <button type="button" onclick="shiftChart(-1)" title="Precedente" class="${CH_NAV}"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <span class="text-sm font-extrabold text-slate-900 min-w-[150px] text-center tabular-nums">${escapeHTML(title)}</span>
+                    <button type="button" onclick="shiftChart(1)" title="Successivo" class="${CH_NAV}"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                </div>
+                <div class="text-center text-xs text-slate-500 mt-1">Totale periodo <b class="text-slate-900 tabular-nums">${fc(periodTotal)}</b></div>
+                <svg viewBox="0 0 ${W} ${H}" class="w-full h-auto mt-2 text-slate-600" role="img" aria-label="Grafico del maturato per categoria">${g}</svg>
+                <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 justify-center">${legend}</div>
+                <p class="mt-3 text-xs text-center text-slate-500 min-h-[3rem]">${detail}</p>`;
+        }
+
+        function setChartMode(m) { chartMode = m; chartSel = null; renderChart(); lucide.createIcons(); }
+        function selectChartBar(i) { chartSel = chartSel === i ? null : i; renderChart(); lucide.createIcons(); }
+        function shiftChart(d) {
+            if (!chartAnchor) chartAnchor = getTodayISO();
+            chartAnchor = chartMode === 'week' ? isoAdd(chartAnchor, 7 * d) : `${Number(chartAnchor.slice(0, 4)) + d}-${chartAnchor.slice(5)}`;
+            chartSel = null;
+            renderChart();
+            lucide.createIcons();
         }
 
         // ==========================================
