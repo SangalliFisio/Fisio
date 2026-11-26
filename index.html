@@ -181,18 +181,23 @@
 
         <section id="view-payments" class="hidden space-y-5">
 
+            <!-- Intestazione periodo: mese (tabella) e anno -->
+            <div id="month-picker-wrap" data-noswipe class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex items-center justify-center gap-2" style="position:relative">
+                <h1 class="sr-only">Registro Incassi</h1>
+                <button type="button" id="month-picker-btn" onclick="toggleMonthPicker()" aria-label="Mese" class="inline-flex items-center gap-1.5 bg-transparent text-slate-900 text-base sm:text-lg font-extrabold rounded-xl px-2 py-1 cursor-pointer">
+                    <span id="month-picker-label">Tutti i mesi</span><i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+                <select id="filter-month" class="hidden" aria-hidden="true" tabindex="-1">
+                    <option value="all">Tutti i mesi</option><option value="01">Gennaio</option><option value="02">Febbraio</option><option value="03">Marzo</option><option value="04">Aprile</option><option value="05">Maggio</option><option value="06">Giugno</option><option value="07">Luglio</option><option value="08">Agosto</option><option value="09">Settembre</option><option value="10">Ottobre</option><option value="11">Novembre</option><option value="12">Dicembre</option>
+                </select>
+                <select id="filter-year" onchange="renderPayments()" aria-label="Anno" class="bg-transparent text-slate-900 text-base sm:text-lg font-extrabold rounded-xl px-2 py-1 focus:ring-2 focus:ring-teal-500 cursor-pointer">
+                    </select>
+                <div id="month-picker" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl p-3" style="position:absolute;z-index:30;top:calc(100% + .5rem);left:50%;transform:translateX(-50%);width:min(20rem,calc(100% - 1rem))"></div>
+            </div>
+
             <!-- Riepilogo Incassi (stesso stile del riepilogo mensile) -->
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-                <div class="flex items-center justify-center gap-2 pb-3.5 border-b border-slate-100">
-                    <h1 class="sr-only">Registro Incassi</h1>
-                    <select id="filter-month" onchange="renderPayments()" aria-label="Mese" class="bg-transparent text-slate-900 text-base sm:text-lg font-extrabold rounded-xl px-2 py-1 focus:ring-2 focus:ring-teal-500 cursor-pointer">
-                        <option value="all">Tutti i mesi</option><option value="01">Gennaio</option><option value="02">Febbraio</option><option value="03">Marzo</option><option value="04">Aprile</option><option value="05">Maggio</option><option value="06">Giugno</option><option value="07">Luglio</option><option value="08">Agosto</option><option value="09">Settembre</option><option value="10">Ottobre</option><option value="11">Novembre</option><option value="12">Dicembre</option>
-                    </select>
-                    <select id="filter-year" onchange="renderPayments()" aria-label="Anno" class="bg-transparent text-slate-900 text-base sm:text-lg font-extrabold rounded-xl px-2 py-1 focus:ring-2 focus:ring-teal-500 cursor-pointer">
-                    </select>
-                </div>
-
-                <div class="mt-3.5">
+                <div>
                     <span class="text-xs font-medium text-slate-500">Totale incassato</span>
                     <div class="flex flex-wrap items-baseline justify-between gap-2 mt-0.5">
                         <div id="kpi-total-collected" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">0,00 €</div>
@@ -205,9 +210,8 @@
 
             <!-- Totale Privati Cash (gruppo 2: separato dai totali del gruppo 1) -->
             <div id="cash-box" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-                <div class="flex items-center justify-between gap-2 pb-3.5 border-b border-slate-100">
+                <div class="pb-3.5 border-b border-slate-100">
                     <h2 id="cash-box-title" class="text-base sm:text-lg font-extrabold text-slate-900">Privati Cash</h2>
-                    <span id="cash-box-period" class="text-xs font-semibold text-slate-500 tabular-nums"></span>
                 </div>
 
                 <div class="mt-3.5">
@@ -216,7 +220,10 @@
                         <div id="kpi-cash-total" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">0,00 €</div>
                         <span id="kpi-cash-count" class="text-xs font-semibold text-slate-500 tabular-nums"></span>
                     </div>
+                    <span id="kpi-cash-due" class="text-xs font-bold text-rose-700 tabular-nums block mt-0.5"></span>
                 </div>
+
+                <button type="button" onclick="openCashPayModal()" class="mt-3.5 w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold cursor-pointer">Registra incasso</button>
 
                 <div id="kpi-cash-rows" class="mt-3.5 space-y-2 text-xs"></div>
             </div>
@@ -361,6 +368,48 @@
     <!-- ========================================== -->
     <!-- MODALE: GESTIONE PAZIENTI PRIVATI          -->
     <!-- ========================================== -->
+    <div id="cash-pay-modal" class="fixed inset-0 z-[60] hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                        <i data-lucide="banknote" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 id="cash-pay-title" class="text-lg font-bold text-slate-900 leading-tight">Registra incasso cash</h3>
+                        <p class="text-xs text-slate-500">Indica la data in cui hai ricevuto il pagamento</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('cash-pay-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form onsubmit="handleCashPaySubmit(event)" class="space-y-4">
+                <input type="hidden" id="cash-pay-id">
+                <div>
+                    <label for="cash-pay-patient" class="block text-xs font-semibold text-slate-600 mb-1">Paziente</label>
+                    <select id="cash-pay-patient" onchange="onCashPayPatientChange()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm font-medium rounded-xl p-2.5"></select>
+                </div>
+                <div>
+                    <label for="cash-pay-amount" class="block text-xs font-semibold text-slate-600 mb-1">Importo (€)</label>
+                    <input type="number" id="cash-pay-amount" step="0.01" min="0.01" inputmode="decimal" required class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl p-2.5 tabular-nums">
+                </div>
+                <div>
+                    <label for="cash-pay-date" class="block text-xs font-semibold text-slate-600 mb-1">Data di Incasso</label>
+                    <input type="date" id="cash-pay-date" required class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl p-2.5">
+                </div>
+                <div>
+                    <label for="cash-pay-note" class="block text-xs font-semibold text-slate-600 mb-1">Descrizione / Note</label>
+                    <input type="text" id="cash-pay-note" placeholder="Facoltativo" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl p-2.5">
+                </div>
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" onclick="closeModal('cash-pay-modal')" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-50 cursor-pointer">Annulla</button>
+                    <button type="submit" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 shadow-xs cursor-pointer">Conferma Incasso</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="cash-patients-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-fade-in max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
@@ -704,7 +753,8 @@
             cloudUrl: 'fisioconto_cloud_url_v1',
             deviceId: 'fisioconto_device_id_v1',
             settings: 'fisioconto_settings_v1',
-            cashPatients: 'fisioconto_cash_patients_v1'
+            cashPatients: 'fisioconto_cash_patients_v1',
+            cashPayments: 'fisioconto_cash_payments_v1'
         };
 
         const DEFAULT_PATIENTS = [
@@ -722,6 +772,7 @@
             selectedPrivatePatient: DEFAULT_PATIENTS[0],
             cashPatients: [],          // Privati Cash: [{ id, name, deleted, rates: [{ from, rate }] }]
             selectedCashPatient: '',
+            cashPayments: [],          // incassi Privati Cash registrati a mano: [{ id, patientId, amount, date, note }]
             payments: [],
             theme: 'light',
             font: 'tecnico',
@@ -798,6 +849,7 @@
                 patients: state.patients,
                 selectedPrivatePatient: state.selectedPrivatePatient,
                 cashPatients: state.cashPatients,
+                cashPayments: state.cashPayments,
                 selectedCashPatient: state.selectedCashPatient,
                 payments: state.payments,
                 settings: getSettingsObj()
@@ -821,6 +873,9 @@
                 state.cashPatients = sanitizeCashPatients(dataObj.cashPatients);
                 if (dataObj.selectedCashPatient) state.selectedCashPatient = dataObj.selectedCashPatient;
             }
+            if (Array.isArray(dataObj.cashPayments)) {
+                state.cashPayments = sanitizeCashPayments(dataObj.cashPayments);
+            }
             if (Array.isArray(dataObj.payments)) {
                 state.payments = dataObj.payments;
             }
@@ -836,6 +891,7 @@
                 localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(state.payments));
                 localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(getSettingsObj(true)));
                 localStorage.setItem(STORAGE_KEYS.cashPatients, JSON.stringify(state.cashPatients));
+                localStorage.setItem(STORAGE_KEYS.cashPayments, JSON.stringify(state.cashPayments));
                 localStorage.setItem(STORAGE_KEYS.meta, JSON.stringify({
                     updatedAt: state.updatedAt,
                     deviceId: state.deviceId,
@@ -857,6 +913,7 @@
                 localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(state.payments));
                 localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(getSettingsObj(true)));
                 localStorage.setItem(STORAGE_KEYS.cashPatients, JSON.stringify(state.cashPatients));
+                localStorage.setItem(STORAGE_KEYS.cashPayments, JSON.stringify(state.cashPayments));
                 localStorage.setItem(STORAGE_KEYS.meta, JSON.stringify({
                     updatedAt: state.updatedAt,
                     deviceId: state.deviceId,
@@ -1084,6 +1141,15 @@
                 console.error('Errore caricamento pazienti cash:', e);
             }
             try {
+                const rawCashPay = localStorage.getItem(STORAGE_KEYS.cashPayments);
+                if (rawCashPay) {
+                    const parsed = JSON.parse(rawCashPay);
+                    if (Array.isArray(parsed)) state.cashPayments = sanitizeCashPayments(parsed);
+                }
+            } catch (e) {
+                console.error('Errore caricamento incassi cash:', e);
+            }
+            try {
                 const rawPayments = localStorage.getItem(STORAGE_KEYS.payments);
                 if (rawPayments) {
                     const parsed = JSON.parse(rawPayments);
@@ -1249,7 +1315,7 @@
 
         function resetCurrentDay() {
             const key = state.selectedDate;
-            const stats0 = getDayStats(key), cash0 = getCashDayStats(key);
+            const stats0 = getDayStats(key, true), cash0 = getCashDayStats(key);
             const stats = { totalCount: stats0.totalCount + cash0.count, totalEuro: stats0.totalEuro + cash0.euro };
 
             if (stats.totalCount === 0) {
@@ -1537,6 +1603,7 @@
                 patients: state.patients,
                 selectedPrivatePatient: state.selectedPrivatePatient,
                 cashPatients: state.cashPatients,
+                cashPayments: state.cashPayments,
                 selectedCashPatient: state.selectedCashPatient,
                 payments: state.payments,
                 settings: getSettingsObj()
@@ -1692,6 +1759,16 @@
 
         const fc = v => formatCurrency(v);
         const catById = id => (state.categories || []).find(c => c.id === id);
+        const catHidden = id => { const c = catById(id); return !!(c && c.hidden); };
+        // voce nascosta dalle impostazioni (categoria o sottocategoria): sparisce da lavoro, report e incassi
+        function isHiddenKey(k) {
+            const [ci, si] = String(k).split(':');
+            const c = catById(ci);
+            if (!c) return false;
+            if (c.hidden) return true;
+            if (si) { const sub = (c.subs || []).find(x => x.id === si); return !!(sub && sub.hidden); }
+            return false;
+        }
         const activeSubs = c => (c.subs || []).filter(s => !s.deleted);
         function plural(u, n) {
             if (n === 1) return u;
@@ -1724,7 +1801,7 @@
             const wd = new Date(y, m - 1, d).toLocaleDateString('it-IT', { weekday: 'long' });
             return `${wd} ${formatDateShortIT(isoDate)}`;
         }
-        const visibleCats = ms => state.categories.filter(c => c.mode !== 'cash' && (!c.deleted || (ms && ms.byCat[c.id])));
+        const visibleCats = ms => state.categories.filter(c => c.mode !== 'cash' && !c.hidden && (!c.deleted || (ms && ms.byCat[c.id])));
 
         // ---- impostazioni salvate (categorie, tariffe, aspetto) ----
         function getSettingsObj(withLook) {
@@ -1742,8 +1819,9 @@
                 unit: String(c.unit || 'prestazione'),
                 deleted: !!c.deleted,
                 purged: !!c.purged,
+                hidden: !!c.hidden,
                 icon: CAT_ICONS.includes(c.icon) ? c.icon : null,
-                subs: (Array.isArray(c.subs) ? c.subs : []).map(s => ({ id: String(s.id), name: String(s.name || 'Sottocategoria'), deleted: !!s.deleted, purged: !!s.purged }))
+                subs: (Array.isArray(c.subs) ? c.subs : []).map(s => ({ id: String(s.id), name: String(s.name || 'Sottocategoria'), deleted: !!s.deleted, purged: !!s.purged, hidden: !!s.hidden }))
             };
         }
 
@@ -1794,6 +1872,10 @@
                 h[0].from = '0000-01-01';
                 return { id: String(p.id), name: String(p.name || 'Paziente'), deleted: !!p.deleted, rates: h };
             });
+        }
+        function sanitizeCashPayments(arr) {
+            return (Array.isArray(arr) ? arr : []).filter(p => p && p.id && p.patientId && typeof p.date === 'string' && Number.isFinite(Number(p.amount)))
+                .map(p => ({ id: String(p.id), patientId: String(p.patientId), amount: Number(p.amount), date: p.date, note: String(p.note || '') }));
         }
         const cashById = id => state.cashPatients.find(p => p.id === id);
         const activeCash = () => state.cashPatients.filter(p => !p.deleted);
@@ -1869,12 +1951,13 @@
             return rec;
         }
 
-        function getDayStats(dateKey) {
+        function getDayStats(dateKey, all) {
             const rec = getDayRecord(dateKey);
             const byCat = {};
             let totalCount = 0, totalEuro = 0;
             const add = (catId, key, n) => {
                 if (n <= 0) return;
+                if (!all && isHiddenKey(key)) return;
                 const euro = n * rateFor(key, dateKey);
                 const b = byCat[catId] || (byCat[catId] = { count: 0, euro: 0, subs: {} });
                 const sv = b.subs[key] || (b.subs[key] = { count: 0, euro: 0 });
@@ -1902,7 +1985,7 @@
                         t.count += sv.count; t.euro += sv.euro;
                     });
                 });
-                Object.entries(getDayRecord(dk).privati).forEach(([pn, c]) => {
+                Object.entries(catHidden('privati') ? {} : getDayRecord(dk).privati).forEach(([pn, c]) => {
                     const n = Number(c) || 0;
                     if (n > 0) {
                         privateByPatient[pn] = (privateByPatient[pn] || 0) + n;
@@ -1917,6 +2000,7 @@
             let collectedTotal = 0, receivedTotal = 0;
             state.payments.forEach(p => {
                 if (!p || !p.date) return;
+                if (catHidden(p.cat)) return;
                 const amt = Number(p.amount) || 0;
                 if (p.date.startsWith(prefix)) { receivedInMonth.push(p); receivedTotal += amt; }
                 if ((p.forMonth || p.date.slice(0, 7)) !== prefix) return;
@@ -2014,6 +2098,7 @@
         function renderCategoryCard(c, ds, rec) {
             if (c.mode === 'cash') return renderCashCard(c, rec);
             const subs = activeSubs(c);
+            const vsubs = subs.filter(s => !s.hidden);
             const b = ds.byCat[c.id] || { count: 0, euro: 0, subs: {} };
             const rateTxt = (c.mode === 'patients' || !subs.length) ? `${rateFor(c.id, state.selectedDate)} € / ${escapeHTML(c.unit)}` : '';
             const icon = catIconOf(c);
@@ -2058,7 +2143,7 @@
                         <div class="flex flex-wrap gap-1.5">${chips}</div>
                     </div>`;
             } else if (subs.length) {
-                const rows = subs.map(s => ({ key: c.id + ':' + s.id, name: s.name }));
+                const rows = vsubs.map(s => ({ key: c.id + ':' + s.id, name: s.name }));
                 if ((Number(rec.counts[c.id]) || 0) > 0) rows.push({ key: c.id, name: 'Altro' });
                 body = `<div class="space-y-3 my-4">${rows.map(r => {
                     const sv = b.subs[r.key] || { count: 0, euro: 0 };
@@ -2099,7 +2184,7 @@
             const rec = getDayRecord(state.selectedDate);
             const cont = document.getElementById('services-container');
             if (cont) {
-                cont.innerHTML = state.categories.filter(c => !c.deleted).map(c => renderCategoryCard(c, ds, rec)).join('')
+                cont.innerHTML = state.categories.filter(c => !c.deleted && !c.hidden).map(c => renderCategoryCard(c, ds, rec)).join('')
                     || `<p class="col-span-full text-center text-sm text-slate-500 py-6">Nessuna categoria attiva: creane una dalle impostazioni.</p>`;
             }
             renderReport();
@@ -2269,7 +2354,7 @@
         // ---- incassi ----
         let payMonthPrefix = null;
         const activeCatOptions = (selected, includeId) => state.categories
-            .filter(c => c.mode !== 'cash' && (!c.deleted || c.id === includeId))
+            .filter(c => c.mode !== 'cash' && (!c.hidden || c.id === includeId) && (!c.deleted || c.id === includeId))
             .map(c => `<option value="${c.id}" ${c.id === selected ? 'selected' : ''}>${escapeHTML(c.name)}</option>`).join('');
 
         function openQuickPaymentModal(presetKey) {
@@ -2277,7 +2362,7 @@
             payMonthPrefix = prefix;
             const ms = getMonthStats(prefix);
             let opts = `<option value="month">Totale mese (${fc(ms.totalEuro)})</option>` +
-                state.categories.filter(c => !c.deleted && c.mode !== 'cash').map(c => `<option value="cat:${c.id}">${escapeHTML(c.name)} mese (${fc((ms.byCat[c.id] || {}).euro || 0)})</option>`).join('');
+                state.categories.filter(c => !c.deleted && !c.hidden && c.mode !== 'cash').map(c => `<option value="cat:${c.id}">${escapeHTML(c.name)} mese (${fc((ms.byCat[c.id] || {}).euro || 0)})</option>`).join('');
             const pats = Object.keys(ms.privateByPatient);
             if (pats.length) {
                 opts += `<optgroup label="Paziente Privato del Mese">` + pats.map(pn =>
@@ -2414,18 +2499,20 @@
             const on = 'border-teal-500 bg-teal-50 text-teal-800';
             const off = 'border-slate-200 bg-white text-slate-600';
             const subRow = (c, s) => `
-                <div class="flex items-center justify-between gap-2 pl-5 text-xs">
+                <div class="flex items-center justify-between gap-2 pl-5 text-xs" style="${s.hidden ? 'opacity:.55' : ''}">
                     <span class="font-semibold text-slate-700 truncate">${escapeHTML(s.name)}</span>
                     <span class="flex shrink-0">
+                        <button type="button" onclick="toggleHidden('sub','${c.id}','${s.id}')" class="${IC_BTN}" title="${s.hidden ? 'Nascosta: tocca per mostrare' : 'Visibile: tocca per nascondere'}"><i data-lucide="${s.hidden ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5"></i></button>
                         <button type="button" onclick="openCatForm('sub','${s.id}','${c.id}')" class="${IC_BTN}" title="Modifica"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
                         <button type="button" onclick="deleteSub('${c.id}','${s.id}')" class="${IC_BTN}" title="Elimina"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </span>
                 </div>`;
             let html = state.categories.filter(c => !c.deleted).map(c => `
-                <div class="pal-${c.color} p-3 rounded-xl border border-slate-200 bg-slate-50/70">
+                <div class="pal-${c.color} p-3 rounded-xl border border-slate-200 bg-slate-50/70" style="${c.hidden ? 'opacity:.55' : ''}">
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2 min-w-0"><span class="w-3 h-3 rounded-full pc-dot shrink-0"></span><span class="text-sm font-bold text-slate-900 truncate">${escapeHTML(c.name)}</span></div>
                         <span class="flex shrink-0">
+                            <button type="button" onclick="toggleHidden('cat','${c.id}')" class="${IC_BTN}" title="${c.hidden ? 'Nascosta: tocca per mostrare' : 'Visibile: tocca per nascondere'}"><i data-lucide="${c.hidden ? 'eye-off' : 'eye'}" class="w-4 h-4"></i></button>
                             <button type="button" onclick="openCatForm('cat','${c.id}')" class="${IC_BTN}" title="Modifica"><i data-lucide="pencil" class="w-4 h-4"></i></button>
                             <button type="button" onclick="deleteCat('${c.id}')" class="${IC_BTN}" title="Elimina"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </span>
@@ -2483,6 +2570,15 @@
             s.purged = true;
             afterCatChange();
             showToast('Sottocategoria eliminata definitivamente');
+        }
+        function toggleHidden(kind, cid, sid) {
+            const c = catById(cid);
+            if (!c) return;
+            let item = c;
+            if (kind === 'sub') { item = (c.subs || []).find(x => x.id === sid); if (!item) return; }
+            item.hidden = !item.hidden;
+            afterCatChange();
+            showToast(item.hidden ? 'Nascosta in lavoro, report e incassi' : 'Di nuovo visibile');
         }
         function restoreCat(id) { const c = catById(id); if (c) { c.deleted = false; afterCatChange(); } }
         function restoreSub(cid, sid) { const c = catById(cid), s = c && c.subs.find(x => x.id === sid); if (s) { s.deleted = false; afterCatChange(); } }
@@ -2719,21 +2815,29 @@
         }
 
         // ---- Totale Privati Cash (schermata incassi, gruppo 2: separato dal gruppo 1) ----
+        // maturato = sedute x tariffa del giorno; incassato = incassi registrati a mano; da incassare = differenza
         function cashPeriodStats() {
             const { year, month } = periodPayments();
+            const inPeriod = d => typeof d === 'string' && d.startsWith(year + '-') && (month === 'all' || d.slice(5, 7) === month);
             const byPatient = {};
-            let total = 0, count = 0;
+            const get = id => byPatient[id] || (byPatient[id] = { name: (cashById(id) || {}).name || 'Paziente', count: 0, euro: 0, days: [], paid: 0, pays: [], due: 0 });
+            let count = 0, earned = 0, paid = 0, due = 0;
             Object.keys(state.dailyLogs).sort().forEach(dk => {
-                if (!dk.startsWith(year + '-')) return;
-                if (month !== 'all' && dk.slice(5, 7) !== month) return;
+                if (!inPeriod(dk)) return;
                 const cs = getCashDayStats(dk);
                 Object.entries(cs.byPatient).forEach(([id, v]) => {
-                    const b = byPatient[id] || (byPatient[id] = { name: v.name, count: 0, euro: 0, days: [] });
-                    b.count += v.count; b.euro += v.euro; b.days.push({ date: dk, count: v.count, euro: v.euro });
+                    const bb = get(id);
+                    bb.count += v.count; bb.euro += v.euro; bb.days.push({ date: dk, count: v.count, euro: v.euro });
                 });
-                total += cs.euro; count += cs.count;
+                count += cs.count; earned += cs.euro;
             });
-            return { year, month, total, count, byPatient };
+            state.cashPayments.forEach(p => {
+                if (!inPeriod(p.date)) return;
+                const bb = get(p.patientId);
+                bb.paid += p.amount; bb.pays.push(p); paid += p.amount;
+            });
+            Object.values(byPatient).forEach(bb => { bb.due = Math.max(0, Math.round((bb.euro - bb.paid) * 100) / 100); due += bb.due; });
+            return { year, month, count, earned, paid, due, byPatient };
         }
 
         function renderCashBox() {
@@ -2741,15 +2845,17 @@
             if (!box) return;
             const c = catById('cash');
             const st = cashPeriodStats();
-            box.classList.toggle('hidden', !!(c ? c.deleted : true) && st.total === 0 && st.count === 0);
+            const empty = st.count === 0 && st.paid === 0;
+            box.classList.toggle('hidden', !c || !!c.hidden || (!!c.deleted && empty));
             const name = c ? c.name : 'Privati Cash';
             document.getElementById('cash-box-title').textContent = name;
             document.getElementById('cash-box-label').textContent = 'Totale ' + name;
-            document.getElementById('cash-box-period').textContent = st.month === 'all' ? `Anno ${st.year}` : `${getMonthNameIT(st.month)} ${st.year}`;
-            document.getElementById('kpi-cash-total').textContent = fc(st.total);
+            document.getElementById('kpi-cash-total').textContent = fc(st.paid);
             document.getElementById('kpi-cash-count').textContent = `${st.count} ${st.count === 1 ? 'seduta' : 'sedute'}`;
+            document.getElementById('kpi-cash-due').textContent = st.due > 0 ? `Da incassare: ${fc(st.due)}` : '';
             const color = c ? c.color : 'black';
-            const rows = Object.entries(st.byPatient).sort((a, b) => a[1].name.localeCompare(b[1].name, 'it')).map(([id, v]) => `
+            const rows = Object.entries(st.byPatient).filter(([, v]) => v.count > 0 || v.paid > 0)
+                .sort((x, y) => x[1].name.localeCompare(y[1].name, 'it')).map(([id, v]) => `
                 <button type="button" onclick="openCashPatientDetail('${escapeAttr(id)}')"
                     class="pal-${color} pc-soft w-full flex items-center justify-between gap-2 p-2.5 rounded-xl transition-opacity hover:opacity-85 cursor-pointer text-left">
                     <div class="min-w-0">
@@ -2757,24 +2863,129 @@
                         <span class="text-xs pc-mid tabular-nums">${v.count} ${v.count === 1 ? 'seduta' : 'sedute'}</span>
                     </div>
                     <span class="flex items-center gap-1.5 shrink-0">
-                        <span class="font-extrabold text-sm tabular-nums">${fc(v.euro)}</span>
+                        <span class="text-right">
+                            <span class="font-extrabold text-sm tabular-nums block">${fc(v.paid)}</span>
+                            ${v.due > 0 ? `<span class="text-[11px] font-bold text-rose-700 tabular-nums block">Da incassare: ${fc(v.due)}</span>` : ''}
+                        </span>
                         <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
                     </span>
                 </button>`).join('');
             document.getElementById('kpi-cash-rows').innerHTML = rows || `<p class="text-xs text-slate-500">Nessuna seduta cash in questo periodo.</p>`;
         }
 
+        let cashDetailId = null;
+        function cashPeriodLabel(st) { return st.month === 'all' ? `Anno ${st.year}` : `${getMonthNameIT(st.month)} ${st.year}`; }
+
         function openCashPatientDetail(id) {
+            cashDetailId = id;
             const st = cashPeriodStats();
             const v = st.byPatient[id];
-            const period = st.month === 'all' ? `Anno ${st.year}` : `${getMonthNameIT(st.month)} ${st.year}`;
-            if (!v) { openInfoModal('Privati Cash', period, `<p class="text-center py-8 text-slate-500 text-sm">Nessuna seduta in questo periodo.</p>`); return; }
-            const html = v.days.slice().sort((a, b) => b.date.localeCompare(a.date)).map(d => `
+            const period = cashPeriodLabel(st);
+            const p = cashById(id);
+            if (!v) {
+                openInfoModal(p ? p.name : 'Privati Cash', period, `<p class="text-center py-8 text-slate-500 text-sm">Nessuna seduta né incasso in questo periodo.</p>
+                    <button type="button" onclick="closeModal('info-modal'); openCashPayModal('${escapeAttr(id)}', true)" class="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold cursor-pointer">Registra incasso</button>`);
+                return;
+            }
+            const box = (l, val, cls) => `<div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80"><span class="text-[11px] font-medium text-slate-500 block">${l}</span><span class="text-base font-extrabold ${cls || 'text-slate-900'} tabular-nums mt-0.5 block">${val}</span></div>`;
+            const h4 = t => `<h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">${t}</h4>`;
+            const pays = v.pays.slice().sort((x, y) => y.date.localeCompare(x.date)).map(x => `
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2 text-xs">
+                    <div class="min-w-0">
+                        <span class="font-semibold text-slate-800 block">${formatDateShortIT(x.date)}</span>
+                        ${x.note ? `<span class="text-slate-500 block truncate">${escapeHTML(x.note)}</span>` : ''}
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <span class="text-sm font-extrabold text-emerald-700 tabular-nums mr-1">${fc(x.amount)}</span>
+                        <button type="button" onclick="editCashPayment('${escapeAttr(x.id)}')" title="Modifica incasso" class="p-2 rounded-lg text-slate-500 hover:text-amber-700 hover:bg-amber-50 cursor-pointer"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="deleteCashPayment('${escapeAttr(x.id)}')" title="Elimina incasso" class="p-2 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>`).join('') || `<p class="text-xs text-slate-500">Nessun incasso registrato.</p>`;
+            const days = v.days.slice().sort((x, y) => y.date.localeCompare(x.date)).map(d => `
                 <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
                     <span class="font-semibold text-slate-800">${formatWeekdayDMY(d.date)}</span>
                     <span class="font-bold text-slate-900 tabular-nums">${d.count} ${d.count === 1 ? 'seduta' : 'sedute'} · ${fc(d.euro)}</span>
-                </div>`).join('');
-            openInfoModal(v.name, `${period} · Totale ${fc(v.euro)} · ${v.count} ${v.count === 1 ? 'seduta' : 'sedute'}`, html);
+                </div>`).join('') || `<p class="text-xs text-slate-500">Nessuna seduta in questo periodo.</p>`;
+            const html = `
+                <div class="grid grid-cols-3 gap-2.5">${box('Maturato', fc(v.euro))}${box('Incassato', fc(v.paid))}${box('Da incassare', fc(v.due), v.due > 0 ? 'text-rose-700' : 'text-slate-900')}</div>
+                <button type="button" onclick="closeModal('info-modal'); openCashPayModal('${escapeAttr(id)}', true)" class="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold cursor-pointer">Registra incasso</button>
+                <div>${h4('Incassi registrati')}<div class="space-y-1.5">${pays}</div></div>
+                <div>${h4('Sedute')}<div class="space-y-1.5">${days}</div></div>`;
+            openInfoModal(v.name, `${period} · ${v.count} ${v.count === 1 ? 'seduta' : 'sedute'}`, html);
+        }
+
+        // ---- registrazione / modifica incassi cash ----
+        let cashPayReturn = null;
+        function defaultCashPayDate() {
+            const { year, month } = periodPayments();
+            const today = getTodayISO();
+            if (today.startsWith(year + '-') && (month === 'all' || today.slice(5, 7) === month)) return today;
+            const mm = month === 'all' ? '12' : month;
+            const last = new Date(Number(year), Number(mm), 0).getDate();
+            return `${year}-${mm}-${String(last).padStart(2, '0')}`;
+        }
+
+        function openCashPayModal(patientId, fromDetail, payId) {
+            const pay = payId ? state.cashPayments.find(x => x.id === payId) : null;
+            const list = activeCash();
+            const pid = pay ? pay.patientId : (patientId || state.selectedCashPatient || (list[0] && list[0].id) || '');
+            const opts = state.cashPatients.filter(x => !x.deleted || x.id === pid);
+            if (!opts.length) { showToast('Aggiungi prima un paziente cash'); return; }
+            cashPayReturn = fromDetail ? pid : null;
+            const sel = document.getElementById('cash-pay-patient');
+            sel.innerHTML = opts.map(x => `<option value="${escapeHTML(x.id)}">${escapeHTML(x.name)}</option>`).join('');
+            sel.value = opts.some(x => x.id === pid) ? pid : opts[0].id;
+            document.getElementById('cash-pay-id').value = pay ? pay.id : '';
+            document.getElementById('cash-pay-title').textContent = pay ? 'Modifica incasso cash' : 'Registra incasso cash';
+            document.getElementById('cash-pay-date').value = pay ? pay.date : defaultCashPayDate();
+            document.getElementById('cash-pay-note').value = pay ? pay.note : '';
+            document.getElementById('cash-pay-amount').value = pay ? Number(pay.amount).toFixed(2) : '';
+            if (!pay) onCashPayPatientChange();
+            document.getElementById('cash-pay-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // in nuova registrazione propone l'importo ancora da incassare per il paziente scelto
+        function onCashPayPatientChange() {
+            if (document.getElementById('cash-pay-id').value) return;
+            const v = cashPeriodStats().byPatient[document.getElementById('cash-pay-patient').value];
+            document.getElementById('cash-pay-amount').value = v && v.due > 0 ? v.due.toFixed(2) : '';
+        }
+
+        function editCashPayment(payId) {
+            closeModal('info-modal');
+            openCashPayModal(null, true, payId);
+        }
+
+        function handleCashPaySubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('cash-pay-id').value;
+            const patientId = document.getElementById('cash-pay-patient').value;
+            const amount = Math.round(parseFloat(String(document.getElementById('cash-pay-amount').value).replace(',', '.')) * 100) / 100;
+            const date = document.getElementById('cash-pay-date').value;
+            const note = document.getElementById('cash-pay-note').value.trim();
+            if (!patientId || !date || !Number.isFinite(amount) || amount <= 0) return;
+            if (id) {
+                const i = state.cashPayments.findIndex(x => x.id === id);
+                if (i === -1) return;
+                state.cashPayments[i] = { ...state.cashPayments[i], patientId, amount, date, note };
+            } else {
+                state.cashPayments.push({ id: 'cpay_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), patientId, amount, date, note });
+            }
+            persistChanges();
+            closeModal('cash-pay-modal');
+            renderPayments();
+            showToast(id ? 'Incasso aggiornato' : 'Incasso registrato');
+            if (cashPayReturn) { const r = cashPayReturn; cashPayReturn = null; openCashPatientDetail(r); }
+        }
+
+        function deleteCashPayment(payId) {
+            if (!confirm('Eliminare questo incasso?')) return;
+            state.cashPayments = state.cashPayments.filter(x => x.id !== payId);
+            persistChanges();
+            renderPayments();
+            showToast('Incasso eliminato');
+            if (cashDetailId && !document.getElementById('info-modal').classList.contains('hidden')) openCashPatientDetail(cashDetailId);
         }
 
         // ---- schermata incassi: riquadro con totali per categoria cliccabili ----
@@ -2783,10 +2994,40 @@
         function periodPayments() {
             const year = document.getElementById('filter-year').value || state.selectedDate.slice(0, 4);
             const month = document.getElementById('filter-month').value || 'all';
-            return { year, month, list: state.payments.filter(p => p && p.date && p.date.startsWith(year + '-') && (month === 'all' || p.date.slice(5, 7) === month)) };
+            return { year, month, list: state.payments.filter(p => p && p.date && p.date.startsWith(year + '-') && (month === 'all' || p.date.slice(5, 7) === month) && !catHidden(p.cat)) };
         }
 
+        // ---- selettore mese: "Tutti i mesi" + tabella 4 righe x 3 colonne ----
+        const MONTH_SHORT = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+        function syncMonthPickerLabel() {
+            const el = document.getElementById('month-picker-label');
+            const v = document.getElementById('filter-month').value || 'all';
+            if (el) el.textContent = v === 'all' ? 'Tutti i mesi' : getMonthNameIT(v);
+        }
+        function renderMonthPicker() {
+            const cur = document.getElementById('filter-month').value || 'all';
+            const on = 'bg-slate-900 text-white', off = 'bg-slate-50 border border-slate-200 text-slate-800';
+            const btn = (code, label, st) => `<button type="button" onclick="selectPaymentMonth('${code}')" class="py-2 rounded-xl text-sm font-bold cursor-pointer ${cur === code ? on : off}" ${st || ''}>${label}</button>`;
+            document.getElementById('month-picker').innerHTML =
+                `<div style="margin-bottom:.5rem">${btn('all', 'Tutti i mesi', 'style="width:100%"')}</div>` +
+                `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem">${MONTH_SHORT.map((m, i) => btn(String(i + 1).padStart(2, '0'), m)).join('')}</div>`;
+        }
+        function toggleMonthPicker(force) {
+            const el = document.getElementById('month-picker');
+            if (!el) return;
+            const open = force !== undefined ? force : el.classList.contains('hidden');
+            el.classList.toggle('hidden', !open);
+            if (open) renderMonthPicker();
+        }
+        function selectPaymentMonth(code) {
+            document.getElementById('filter-month').value = code;
+            toggleMonthPicker(false);
+            renderPayments();
+        }
+        document.addEventListener('click', e => { if (!e.target.closest('#month-picker-wrap')) toggleMonthPicker(false); });
+
         function renderPayments() {
+            syncMonthPickerLabel();
             const { list } = periodPayments();
             const sums = {};
             list.forEach(p => { const k = p.cat || '?'; sums[k] = (sums[k] || 0) + (Number(p.amount) || 0); });
@@ -2801,7 +3042,7 @@
                         <i data-lucide="chevron-right" class="w-4 h-4 pc-mid"></i>
                     </span>
                 </button>`;
-            let html = state.categories.filter(c => c.mode !== 'cash' && (!c.deleted || sums[c.id])).map(c => row(c.id, c.color, c.name, sums[c.id] || 0)).join('');
+            let html = state.categories.filter(c => c.mode !== 'cash' && !c.hidden && (!c.deleted || sums[c.id])).map(c => row(c.id, c.color, c.name, sums[c.id] || 0)).join('');
             if (sums['?']) html += row('?', 'gray', 'Altro', sums['?']);
             document.getElementById('kpi-cats').innerHTML = html;
             renderCashBox();
@@ -2941,7 +3182,7 @@
             if (!el) return;
             const { slots, title } = chartData();
             if (chartSel !== null && !slots[chartSel]) chartSel = null;
-            const cats = state.categories.filter(c => c.mode !== 'cash' && (!c.deleted || slots.some(s => s.byCat[c.id])));
+            const cats = state.categories.filter(c => c.mode !== 'cash' && !c.hidden && (!c.deleted || slots.some(s => s.byCat[c.id])));
             const max = Math.max(0, ...slots.map(s => s.total));
             const step = niceStep((max || 40) / 4);
             const top = Math.max(step, Math.ceil(max / step) * step);
