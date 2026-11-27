@@ -258,13 +258,6 @@
                     <span class="flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4"></i>Categorie e sottocategorie</span><i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
                 <div>
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Promemoria serale</h4>
-                    <button type="button" onclick="downloadReminderICS()" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                        <i data-lucide="bell" class="w-4 h-4 text-amber-600"></i><span>Aggiungi al calendario: ogni giorno alle 19:00</span>
-                    </button>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Si apre il Calendario del telefono: conferma l'evento e controlla che il suo promemoria sia "al momento dell'evento". Per escludere giorni (es. domenica) modifica la ripetizione nel Calendario.</p>
-                </div>
-                <div>
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dati</h4>
                                         <div class="flex gap-2">
                         <button type="button" onclick="shareBackup()" class="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold whitespace-nowrap cursor-pointer"><i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i><span>Backup</span></button>
@@ -1374,31 +1367,6 @@
 
 
         // misura la barra sotto l'intestazione della schermata lavoro e la applica a report e incassi
-        // promemoria giornaliero (19:00) tramite file calendario .ics: affidabile anche ad app chiusa
-        function downloadReminderICS() {
-            const now = new Date();
-            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (now.getHours() >= 19 ? 1 : 0), 19, 0, 0);
-            const p2 = n => String(n).padStart(2, '0');
-            const day = `${start.getFullYear()}${p2(start.getMonth() + 1)}${p2(start.getDate())}`;
-            const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
-            const ics = [
-                'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FisioLog//Promemoria//IT', 'CALSCALE:GREGORIAN',
-                'BEGIN:VEVENT', 'UID:fisiolog-promemoria-1900@fisiolog', 'DTSTAMP:' + stamp,
-                `DTSTART:${day}T190000`, `DTEND:${day}T191500`, 'RRULE:FREQ=DAILY',
-                'SUMMARY:FisioLog: hai segnato tutto il lavoro di oggi?',
-                'DESCRIPTION:Apri FisioLog e controlla di aver segnato tutte le prestazioni di oggi.',
-                'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Hai segnato tutto il lavoro di oggi?', 'TRIGGER:PT0M', 'END:VALARM',
-                'END:VEVENT', 'END:VCALENDAR'
-            ].join('\r\n');
-            const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'promemoria-fisiolog.ics';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 2000);
-            showToast('File scaricato: aprilo per aggiungerlo al calendario');
-        }
-
         function syncBarHeight() {
             const bar = document.getElementById('date-bar');
             if (!bar) return;
@@ -1791,7 +1759,7 @@
             black:  ['#f4f4f5', '#d4d4d8', '#09090b', '#000000', '#27272a', '#71717a']
         };
         const PALETTE_NAMES = { red: 'Rosso', yellow: 'Giallo', brown: 'Marrone', green: 'Verde', blue: 'Blu', indigo: 'Indaco', teal: 'Verde acqua', pink: 'Rosa', gray: 'Grigio', black: 'Nero' };
-        const CAT_ICONS = ['stethoscope', 'heart-pulse', 'activity', 'syringe', 'pill', 'bandage', 'brain', 'bone', 'hand-heart', 'accessibility', 'baby', 'ambulance', 'hospital', 'home', 'users', 'user-check', 'footprints', 'dumbbell', 'banknote', 'wallet', 'coins'];
+        const CAT_ICONS = ['stethoscope', 'activity', 'heart-pulse', 'bone', 'bandage', 'hand-heart', 'accessibility', 'footprints', 'dumbbell', 'brain', 'hospital', 'banknote'];
         const FONTS = {
             classico: ['Classico', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'],
             moderno:  ['Moderno', "'Poppins', sans-serif"],
@@ -2665,9 +2633,10 @@
             const inp = 'w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-teal-500';
             const cur = item && kind === 'cat' ? item.color : 'blue';
             const curIcon = kind === 'cat' && item ? catIconOf(item) : 'activity';
+            const iconList = CAT_ICONS.includes(curIcon) ? CAT_ICONS : [curIcon].concat(CAT_ICONS);
             const icons = kind !== 'cat' ? '' : `
                 <div><span class="block text-xs font-semibold text-slate-600 mb-1.5">Icona</span>
-                <div class="grid grid-cols-6 gap-2">${CAT_ICONS.map(n => `
+                <div class="grid grid-cols-6 gap-2">${iconList.map(n => `
                     <label class="cursor-pointer" title="${n}"><input type="radio" name="cf-icon" value="${n}" class="peer sr-only" ${n === curIcon ? 'checked' : ''}>
                     <span class="flex items-center justify-center h-10 rounded-xl border-2 border-slate-200 bg-white text-slate-600 peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-700"><i data-lucide="${n}" class="w-5 h-5"></i></span></label>`).join('')}</div></div>`;
             const colors = kind !== 'cat' ? '' : `
@@ -2889,11 +2858,36 @@
 
         // ---- Totale Privati Cash (schermata incassi, gruppo 2: separato dal gruppo 1) ----
         // maturato = sedute x tariffa del giorno; incassato = incassi registrati a mano; da incassare = differenza
+        // quanto resta da pagare per ogni seduta cash: i pagamenti coprono le sedute piu' vecchie
+        // (il pagamento conta sulla data in cui e' registrato, ma chiude il debito del mese in cui e' stata fatta la seduta)
+        function cashUnpaidByDay() {
+            const days = {};
+            Object.keys(state.dailyLogs).sort().forEach(dk => {
+                Object.entries(getCashDayStats(dk).byPatient).forEach(([id, v]) => {
+                    (days[id] = days[id] || []).push({ date: dk, euro: v.euro });
+                });
+            });
+            const paidAll = {};
+            state.cashPayments.forEach(p => { paidAll[p.patientId] = (paidAll[p.patientId] || 0) + (Number(p.amount) || 0); });
+            const out = {};
+            Object.entries(days).forEach(([id, list]) => {
+                let pool = paidAll[id] || 0;
+                out[id] = {};
+                list.forEach(x => {
+                    const take = Math.min(pool, x.euro);
+                    pool -= take;
+                    out[id][x.date] = Math.round((x.euro - take) * 100) / 100;
+                });
+            });
+            return out;
+        }
+
         function cashPeriodStats() {
             const { year, month } = periodPayments();
             const inPeriod = d => typeof d === 'string' && d.startsWith(year + '-') && (month === 'all' || d.slice(5, 7) === month);
             const byPatient = {};
             const get = id => byPatient[id] || (byPatient[id] = { name: (cashById(id) || {}).name || 'Paziente', count: 0, euro: 0, days: [], paid: 0, pays: [], due: 0 });
+            const unpaid = cashUnpaidByDay();
             let count = 0, earned = 0, paid = 0, due = 0;
             Object.keys(state.dailyLogs).sort().forEach(dk => {
                 if (!inPeriod(dk)) return;
@@ -2901,6 +2895,7 @@
                 Object.entries(cs.byPatient).forEach(([id, v]) => {
                     const bb = get(id);
                     bb.count += v.count; bb.euro += v.euro; bb.days.push({ date: dk, count: v.count, euro: v.euro });
+                    bb.due += (unpaid[id] && unpaid[id][dk]) || 0;
                 });
                 count += cs.count; earned += cs.euro;
             });
@@ -2909,7 +2904,7 @@
                 const bb = get(p.patientId);
                 bb.paid += p.amount; bb.pays.push(p); paid += p.amount;
             });
-            Object.values(byPatient).forEach(bb => { bb.due = Math.max(0, Math.round((bb.euro - bb.paid) * 100) / 100); due += bb.due; });
+            Object.values(byPatient).forEach(bb => { bb.due = Math.round(bb.due * 100) / 100; due += bb.due; });
             return { year, month, count, earned, paid, due, byPatient };
         }
 
