@@ -212,9 +212,12 @@
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
                 <div>
                     <span class="text-xs font-medium text-slate-500">Totale incassato</span>
-                    <div class="flex flex-wrap items-baseline justify-between gap-2 mt-0.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mt-0.5">
                         <div id="kpi-total-collected" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">0,00 €</div>
-                        
+                        <div class="text-right text-sm font-extrabold tabular-nums leading-tight">
+                            <div class="text-rose-700">TASSE: <span id="kpi-tax">0 €</span></div>
+                            <div class="text-emerald-700 mt-0.5">NETTO: <span id="kpi-net">0 €</span></div>
+                        </div>
                     </div>
                 </div>
 
@@ -3148,13 +3151,21 @@
         }
         document.addEventListener('click', e => { if (!e.target.closest('#payments-bar')) toggleMonthPicker(false); });
 
+        // regime forfettario 15% + INPS 26,07% sul 78% del fatturato: ~32% di prelievo, quindi netto ~68%
+        const NET_RATE = 0.68;
         function renderPayments() {
             populateYearFilter();
             syncPaymentsBar();
             const { list } = periodPayments();
             const sums = {};
             list.forEach(p => { const k = p.cat || '?'; sums[k] = (sums[k] || 0) + (Number(p.amount) || 0); });
-            document.getElementById('kpi-total-collected').textContent = fc(list.reduce((a, p) => a + (Number(p.amount) || 0), 0));
+            const totalCollected = list.reduce((a, p) => a + (Number(p.amount) || 0), 0);
+            document.getElementById('kpi-total-collected').textContent = fc(totalCollected);
+            // stima tasse e netto a cifra piena (stessa formula del foglio: netto = incassato x 0,68)
+            const whole = v => Math.round(v).toLocaleString('it-IT') + ' €';
+            const netEst = Math.round(totalCollected * NET_RATE);
+            document.getElementById('kpi-tax').textContent = whole(Math.round(totalCollected) - netEst);
+            document.getElementById('kpi-net').textContent = whole(netEst);
 
             const row = (id, color, name, amount) => `
                 <button type="button" onclick="openPaymentReport('${id}')"
