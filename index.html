@@ -3213,7 +3213,29 @@
         // ==========================================
         // NAVIGAZIONE, REPORT (RIEPILOGO MESE + GRAFICO)
         // ==========================================
+        // porta il giorno selezionato nel mese indicato (stesso giorno, o l'ultimo se il mese e' piu' corto)
+        function setSelectedMonth(y, m) {
+            const d = parseInt(state.selectedDate.slice(8, 10), 10) || 1;
+            const maxDay = new Date(y, m, 0).getDate();
+            state.selectedDate = `${y}-${String(m).padStart(2, '0')}-${String(Math.min(d, maxDay)).padStart(2, '0')}`;
+        }
+
         function switchTab(tab) {
+            // report e incassi mostrano lo stesso mese quando si passa dall'uno all'altro
+            const prev = ['work', 'report', 'payments'].find(k => !document.getElementById('view-' + k).classList.contains('hidden'));
+            if (prev === 'report' && tab === 'payments') {
+                document.getElementById('filter-year').value = state.selectedDate.slice(0, 4);
+                document.getElementById('filter-month').value = state.selectedDate.slice(5, 7);
+            } else if (prev === 'payments' && tab === 'report') {
+                const mv = document.getElementById('filter-month').value || 'all';
+                if (mv === 'all') {
+                    const t = getTodayISO();
+                    setSelectedMonth(parseInt(t.slice(0, 4), 10), parseInt(t.slice(5, 7), 10));
+                } else {
+                    populateYearFilter();
+                    setSelectedMonth(parseInt(document.getElementById('filter-year').value, 10), parseInt(mv, 10));
+                }
+            }
             const on = 'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-teal-700 shadow-xs cursor-pointer';
             const off = 'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer';
             ['work', 'report', 'payments'].forEach(k => {
