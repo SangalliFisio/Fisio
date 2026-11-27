@@ -137,19 +137,20 @@
             </div>
         </div>
         <!-- Barra mese/anno degli incassi: fa parte dell'intestazione (come la barra del report) -->
-        <div id="payments-bar" class="hidden flex items-center justify-center max-w-5xl mx-auto px-4" style="height:var(--bar-h,4.25rem)">
+        <div id="payments-bar" class="hidden flex items-center justify-center max-w-5xl mx-auto px-4" style="height:var(--bar-h,4.25rem);position:relative">
             <h1 class="sr-only">Registro Incassi</h1>
             <input type="hidden" id="filter-year">
             <select id="filter-month" class="hidden" aria-hidden="true" tabindex="-1">
                 <option value="all">Tutti i mesi</option><option value="01">Gennaio</option><option value="02">Febbraio</option><option value="03">Marzo</option><option value="04">Aprile</option><option value="05">Maggio</option><option value="06">Giugno</option><option value="07">Luglio</option><option value="08">Agosto</option><option value="09">Settembre</option><option value="10">Ottobre</option><option value="11">Novembre</option><option value="12">Dicembre</option>
             </select>
-            <div class="flex items-center justify-center gap-1.5 sm:gap-3">
-                <button type="button" id="payments-all-btn" onclick="setPaymentsAllMonths()" title="Mostra tutti i mesi dell'anno"
-                    class="px-3 py-2 rounded-xl border border-teal-200 bg-teal-50 text-teal-800 text-xs font-bold transition-colors cursor-pointer shrink-0">Tutti i mesi</button>
+            <div class="flex items-center justify-center gap-1 sm:gap-3">
+                <button type="button" id="payments-all-btn" data-noswipe onclick="toggleMonthPicker()" title="Scegli il mese"
+                    class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl border border-teal-200 bg-teal-50 text-teal-800 text-xs font-bold transition-colors cursor-pointer shrink-0"><span>Tutti i mesi</span><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
                 <button type="button" onclick="changePaymentsPeriod(-1)" title="Mese precedente" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
-                <h2 id="payments-period-label" class="text-base sm:text-lg font-extrabold text-slate-900 text-center tabular-nums" style="min-width:8.5rem"></h2>
+                <h2 id="payments-period-label" class="text-base sm:text-lg font-extrabold text-slate-900 text-center tabular-nums" style="min-width:7.5rem"></h2>
                 <button type="button" onclick="changePaymentsPeriod(1)" title="Mese successivo" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
             </div>
+            <div id="month-picker" data-noswipe class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl p-3" style="position:absolute;z-index:30;top:calc(100% + .5rem);left:50%;transform:translateX(-50%);width:min(20rem,calc(100% - 1rem))"></div>
         </div>
         <!-- Barra mese del report: fa parte dell'intestazione -->
         <div id="report-bar" class="hidden flex items-center justify-center max-w-5xl mx-auto px-4" style="height:var(--bar-h,4.25rem)">
@@ -3102,12 +3103,13 @@
             const month = document.getElementById('filter-month').value || 'all';
             label.textContent = month === 'all' ? 'Anno ' + year : getMonthLabelIT(year + '-' + month);
             const btn = document.getElementById('payments-all-btn');
-            if (btn) btn.className = 'px-3 py-2 rounded-xl border text-xs font-bold transition-colors cursor-pointer shrink-0 ' +
+            if (btn) btn.className = 'inline-flex items-center gap-1 px-2.5 py-2 rounded-xl border text-xs font-bold transition-colors cursor-pointer shrink-0 ' +
                 (month === 'all' ? 'border-teal-600 bg-teal-600 text-white' : 'border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100');
         }
         // con un mese scelto le frecce cambiano mese (e anno); con "Tutti i mesi" cambiano anno
         function changePaymentsPeriod(delta) {
             const yEl = document.getElementById('filter-year'), mEl = document.getElementById('filter-month');
+            toggleMonthPicker(false);
             populateYearFilter();
             let y = parseInt(yEl.value, 10);
             const m = mEl.value || 'all';
@@ -3121,11 +3123,30 @@
             yEl.value = String(y);
             renderPayments();
         }
-        function setPaymentsAllMonths() {
+        // menù mesi: "Tutti i mesi" + tabella 4 righe x 3 colonne
+        const MONTH_SHORT = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+        function renderMonthPicker() {
+            const cur = document.getElementById('filter-month').value || 'all';
+            const on = 'bg-slate-900 text-white', off = 'bg-slate-50 border border-slate-200 text-slate-800';
+            const btn = (code, label, st) => `<button type="button" onclick="selectPaymentMonth('${code}')" class="py-2 rounded-xl text-sm font-bold cursor-pointer ${cur === code ? on : off}" ${st || ''}>${label}</button>`;
+            document.getElementById('month-picker').innerHTML =
+                `<div style="margin-bottom:.5rem">${btn('all', 'Tutti i mesi', 'style="width:100%"')}</div>` +
+                `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem">${MONTH_SHORT.map((m, i) => btn(String(i + 1).padStart(2, '0'), m)).join('')}</div>`;
+        }
+        function toggleMonthPicker(force) {
+            const el = document.getElementById('month-picker');
+            if (!el) return;
+            const open = force !== undefined ? force : el.classList.contains('hidden');
+            el.classList.toggle('hidden', !open);
+            if (open) renderMonthPicker();
+        }
+        function selectPaymentMonth(code) {
             populateYearFilter();
-            document.getElementById('filter-month').value = 'all';
+            document.getElementById('filter-month').value = code;
+            toggleMonthPicker(false);
             renderPayments();
         }
+        document.addEventListener('click', e => { if (!e.target.closest('#payments-bar')) toggleMonthPicker(false); });
 
         function renderPayments() {
             populateYearFilter();
@@ -3191,6 +3212,7 @@
             document.getElementById('date-bar').classList.toggle('hidden', tab !== 'work');
             document.getElementById('report-bar').classList.toggle('hidden', tab !== 'report');
             document.getElementById('payments-bar').classList.toggle('hidden', tab !== 'payments');
+            toggleMonthPicker(false);
             if (tab === 'payments') { populateYearFilter(); renderPayments(); }
             else renderWorkView();
             lucide.createIcons();
