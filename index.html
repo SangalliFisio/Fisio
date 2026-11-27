@@ -258,6 +258,13 @@
                     <span class="flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4"></i>Categorie e sottocategorie</span><i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
                 <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Promemoria serale</h4>
+                    <button type="button" onclick="downloadReminderICS()" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                        <i data-lucide="bell" class="w-4 h-4 text-amber-600"></i><span>Aggiungi al calendario: ogni giorno alle 19:00</span>
+                    </button>
+                    <p class="text-[11px] text-slate-500 mt-1.5">Si apre il Calendario del telefono: conferma l'evento e controlla che il suo promemoria sia "al momento dell'evento". Per escludere giorni (es. domenica) modifica la ripetizione nel Calendario.</p>
+                </div>
+                <div>
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dati</h4>
                                         <div class="flex gap-2">
                         <button type="button" onclick="shareBackup()" class="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold whitespace-nowrap cursor-pointer"><i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-indigo-600"></i><span>Backup</span></button>
@@ -1367,6 +1374,31 @@
 
 
         // misura la barra sotto l'intestazione della schermata lavoro e la applica a report e incassi
+        // promemoria giornaliero (19:00) tramite file calendario .ics: affidabile anche ad app chiusa
+        function downloadReminderICS() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (now.getHours() >= 19 ? 1 : 0), 19, 0, 0);
+            const p2 = n => String(n).padStart(2, '0');
+            const day = `${start.getFullYear()}${p2(start.getMonth() + 1)}${p2(start.getDate())}`;
+            const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+            const ics = [
+                'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FisioLog//Promemoria//IT', 'CALSCALE:GREGORIAN',
+                'BEGIN:VEVENT', 'UID:fisiolog-promemoria-1900@fisiolog', 'DTSTAMP:' + stamp,
+                `DTSTART:${day}T190000`, `DTEND:${day}T191500`, 'RRULE:FREQ=DAILY',
+                'SUMMARY:FisioLog: hai segnato tutto il lavoro di oggi?',
+                'DESCRIPTION:Apri FisioLog e controlla di aver segnato tutte le prestazioni di oggi.',
+                'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Hai segnato tutto il lavoro di oggi?', 'TRIGGER:PT0M', 'END:VALARM',
+                'END:VEVENT', 'END:VCALENDAR'
+            ].join('\r\n');
+            const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'promemoria-fisiolog.ics';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+            showToast('File scaricato: aprilo per aggiungerlo al calendario');
+        }
+
         function syncBarHeight() {
             const bar = document.getElementById('date-bar');
             if (!bar) return;
@@ -1383,6 +1415,12 @@
         }
 
 
+
+        function selectPrivatePatient(name) {
+            state.selectedPrivatePatient = name;
+            persistChanges({ syncCloud: false, immediateCloud: false });
+            renderWorkView();
+        }
 
         function onPrivatePatientSelectChange(e) {
             state.selectedPrivatePatient = e.target.value;
@@ -2064,8 +2102,8 @@
             const ap = cashById(state.selectedCashPatient);
             const apCount = ap ? (Number((rec.cash || {})[ap.id]) || 0) : 0;
             const rateTxt = ap ? `${cashRateFor(ap, state.selectedDate)} € / ${escapeHTML(c.unit)}` : '';
-            const chips = Object.values(cs.byPatient).map(v =>
-                `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg pc-soft text-xs font-semibold">${escapeHTML(v.name)}<span class="px-1.5 rounded-md pc-btn text-[11px]">${v.count}</span></span>`).join('')
+            const chips = Object.entries(cs.byPatient).map(([pid, v]) =>
+                `<button type="button" onclick="selectCashPatient('${escapeAttr(pid)}')" title="Seleziona ${escapeHTML(v.name)}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg pc-soft text-xs font-semibold cursor-pointer" ${ap && ap.id === pid ? 'style="box-shadow:0 0 0 2px var(--ac)"' : ''}>${escapeHTML(v.name)}<span class="px-1.5 rounded-md pc-btn text-[11px]">${v.count}</span></button>`).join('')
                 || `<span class="text-xs text-slate-400">Nessun paziente</span>`;
             return `<div class="pal-${c.color} bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between"><div>
                 <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
@@ -2097,7 +2135,24 @@
                     <span class="text-[11px] font-semibold text-slate-500 block mb-1.5">Pazienti trattati oggi (${cs.count})</span>
                     <div class="flex flex-wrap gap-1.5">${chips}</div>
                 </div>
+                <button type="button" onclick="openCashPayFromWork()" class="mt-3 w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold cursor-pointer">Registra incasso</button>
             </div></div>`;
+        }
+
+        function selectCashPatient(id) {
+            state.selectedCashPatient = id;
+            persistChanges({ syncCloud: false, immediateCloud: false });
+            renderWorkView();
+        }
+
+        // incasso registrato dalla schermata lavoro: paziente scelto, data e importo del giorno selezionato
+        function openCashPayFromWork() {
+            const p = cashById(state.selectedCashPatient);
+            if (!p || p.deleted) { showToast('Aggiungi prima un paziente cash'); return; }
+            openCashPayModal(p.id, false);
+            cashPayWorkDate = state.selectedDate;
+            document.getElementById('cash-pay-date').value = cashPayWorkDate;
+            onCashPayPatientChange();
         }
 
         function onCashPatientSelectChange(e) {
@@ -2139,7 +2194,7 @@
                 const ap = state.selectedPrivatePatient;
                 const apCount = rec.privati[ap] || 0;
                 const chips = Object.entries(rec.privati).filter(([, n]) => (Number(n) || 0) > 0).map(([pn, n]) =>
-                    `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg pc-soft text-xs font-semibold">${escapeHTML(pn)}<span class="px-1.5 rounded-md pc-btn text-[11px]">${n}</span></span>`).join('')
+                    `<button type="button" onclick="selectPrivatePatient('${escapeAttr(pn)}')" title="Seleziona ${escapeHTML(pn)}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg pc-soft text-xs font-semibold cursor-pointer" ${pn === ap ? 'style="box-shadow:0 0 0 2px var(--ac)"' : ''}>${escapeHTML(pn)}<span class="px-1.5 rounded-md pc-btn text-[11px]">${n}</span></button>`).join('')
                     || `<span class="text-xs text-slate-400">Nessun paziente</span>`;
                 body = `
                     <div class="mt-3.5 flex items-center gap-2">
@@ -2937,6 +2992,7 @@
 
         // ---- registrazione / modifica incassi cash ----
         let cashPayReturn = null;
+        let cashPayWorkDate = null;
         function defaultCashPayDate() {
             const { year, month } = periodPayments();
             const today = getTodayISO();
@@ -2947,6 +3003,7 @@
         }
 
         function openCashPayModal(patientId, fromDetail, payId) {
+            cashPayWorkDate = null;
             const pay = payId ? state.cashPayments.find(x => x.id === payId) : null;
             const list = activeCash();
             const pid = pay ? pay.patientId : (patientId || state.selectedCashPatient || (list[0] && list[0].id) || '');
@@ -2969,6 +3026,14 @@
         // in nuova registrazione propone l'importo ancora da incassare per il paziente scelto
         function onCashPayPatientChange() {
             if (document.getElementById('cash-pay-id').value) return;
+            if (cashPayWorkDate) {
+                const pid = document.getElementById('cash-pay-patient').value;
+                const pt = cashById(pid);
+                const n = pt ? Number((getDayRecord(cashPayWorkDate).cash || {})[pid]) || 0 : 0;
+                const a = pt ? n * cashRateFor(pt, cashPayWorkDate) : 0;
+                document.getElementById('cash-pay-amount').value = a > 0 ? a.toFixed(2) : '';
+                return;
+            }
             const v = cashPeriodStats().byPatient[document.getElementById('cash-pay-patient').value];
             document.getElementById('cash-pay-amount').value = v && v.due > 0 ? v.due.toFixed(2) : '';
         }
